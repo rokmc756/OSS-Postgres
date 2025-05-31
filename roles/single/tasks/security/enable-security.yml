@@ -1,0 +1,33 @@
+---
+#- name: Set SELinux Permissive Mode
+#  shell: |
+#    setenforce 0
+#    sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
+
+
+- name: Enable Firewalld
+  systemd:
+    name: firewalld
+    state: started
+    enabled: yes
+
+
+- name: Reload Firewalld
+  command: firewall-cmd --reload
+
+
+#- name: Enable SELinux
+#  selinux:
+#    policy: targeted
+#    state: enforcing
+#
+#
+#- name: Relabel SELinux
+#  file:
+#    path: /.autorelabel
+#    state: touch
+#  notify:
+#    - Restart System
+#    - Waiting for Server to Come Back After Reboot
+#
+

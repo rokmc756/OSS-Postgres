@@ -1,0 +1,68 @@
+---
+- name: Insert Executable Binary Path into .bashrc for VMware Postgres {{ pgsql.major_version }}
+  become_user: postgres
+  lineinfile:
+    path: "{{ item }}"
+    line: "export PATH={{ common.pgsql_bin_dir }}:$PATH"
+  with_items:
+    - "{{ pgsql.base_dir }}/.bash_profile"
+    - "{{ pgsql.home_dir }}/.bashrc"
+
+
+- name: Create Workers Instance. It will Automatically be Set by the Monitor as the Primary Node with Read-Write Capability (PGDATA = /var/lib/pgpsql/ha)
+  become_user: postgres
+  shell: |
+    source {{ pgsql.base_dir }}/.bash_profile
+    {{ common.pgsql_bin_dir }}/pg_autoctl create postgres --pgdata '{{ pgsql.base_dir }}/{{ _pgfailover.workers_database }}' --auth trust --ssl-self-signed \
+    --username ha-admin --dbname '{{ _pgfailover.app_database }}' --hostname '{{ inventory_hostname }}' --pgctl {{ common.pgsql_bin_dir }}/pg_ctl \
+    --monitor "postgres://autoctl_node@{{ hostvars[groups['monitor'][0]].ansible_hostname }}/pg_auto_failover?sslmode={{ _pgfailover.sslmode }}"
+  async: 300
+  poll: 5
+  register: create_workers_instance
+  args:
+    chdir: "{{ pgsql.base_dir }}"
+    executable: /bin/bash
+
+
+- name: Create Systemd Service File of Worker Instances
+  become_user: postgres
+  shell: |
+    source {{ pgsql.base_dir }}/.bash_profile
+    {{ common.pgsql_bin_dir }}/pg_autoctl -q show systemd --pgdata '{{ pgsql.base_dir }}/{{ _pgfailover.workers_database }}' > pgautofailover.service
+  register: add_workers_systemd_service
+  async: 180
+  poll: 5
+  args:
+    chdir: "{{ pgsql.base_dir }}"
+    executable: /bin/bash
+  # {{ common.pgsql_bin_dir }}/pg_autoctl -q show systemd \
+
+
+- name: Copy Primary Systemd Service File of Worker Instances
+  copy:
+    src: "{{ pgsql.base_dir }}/pgautofailover.service"
+    dest: "/etc/systemd/system/"
+    owner: root
+    group: root
+    mode: 0644
+    remote_src: true
+
+
+- name: Replace Database Directory for Worker Instacnes
+  become_user: postgres
+  replace:
+    path: "{{ pgsql.base_dir }}/.bash_profile"
+    regexp: '^(.*)PGDATA=(.*)$'
+    replace: 'PGDATA=/{{ pgsql.base_dir }}/{{ _pgfailover.workers_database }}'
+    backup: yes
+
+
+- name: Reload and Start Primary Systemd Service of Worker Instances
+  systemd:
+    name: pgautofailover
+    state: started
+    daemon_reload: yes
+  register: add_pgautofailover_service
+  async: 60
+  poll: 5
+

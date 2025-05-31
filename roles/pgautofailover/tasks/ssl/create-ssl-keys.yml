@@ -1,0 +1,58 @@
+---
+- name: Create SSL Directory
+  become_user: postgres
+  file:
+    path: "{{ _ssl.ssl_dir }}"
+    state: directory
+    mode: 0755
+    owner: postgres
+    group: postgres
+  register: create_ssl_dir
+
+
+- name: Generate a CA Certificate Private Key on SSL Diretory
+  become_user: postgres
+  shell: |
+    openssl genrsa -out {{ _ssl.ssl_dir }}/ca.key 4096
+  register: gen_ca_cert_priv_key
+
+
+- name: Generate the CA Certificate on SSL Diretory
+  become_user: postgres
+  shell: |
+    openssl req -x509 -new -nodes -sha512 -days 3650 \
+    -subj "/C={{ _ssl.ssl_country }}/ST={{ _ssl.ssl_state }}/L={{ _ssl.ssl_location }}/O={{ _ssl.ssl_organization }}/OU={{ _ssl.ssl_organization_unit }}/CN={{ _ssl.ssl_common_name }}/emailAddress={{ _ssl.ssl_email }}" \
+    -key {{ _ssl.ssl_dir }}/ca.key -out {{ _ssl.ssl_dir }}/ca.crt
+  register: gen_ca_cert
+
+
+- name: Generate a Private Key on SSL Diretory
+  become_user: postgres
+  shell: |
+    openssl genrsa -out {{ _ssl.ssl_dir }}/server.key 4096
+  register: gen_priv_key
+
+
+- name: Generate a Certificate Signing Request (CSR) on SSL Diretory
+  become_user: postgres
+  shell: |
+    openssl req -sha512 -new \
+    -subj "/C={{ _ssl.ssl_country }}/ST={{ _ssl.ssl_state }}/L={{ _ssl.ssl_location }}/O={{ _ssl.ssl_organization }}/OU={{ _ssl.ssl_organization_unit }}/CN={{ _ssl.ssl_common_name }}/emailAddress={{ _ssl.ssl_email }}" \
+    -key {{ _ssl.ssl_dir }}/server.key \
+    -out {{ _ssl.ssl_dir }}/server.csr
+  register: gen_cert_sign_req
+
+
+- name: Copy an x509 v3 Extension File onto SSL Diretory
+  template: src=v3.ext.j2 dest={{ _ssl.ssl_dir }}/v3.ext owner=postgres group=postgres mode=644 force=yes
+  register: copy_x509_v3_ext
+
+
+- name: Replace the CRS and CRT File Names on SSL Diretory for Monitor Node
+  become_user: postgres
+  shell: |
+    openssl x509 -req -sha512 -days 3650 -extfile {{ _ssl.ssl_dir }}/v3.ext \
+    -CA {{ _ssl.ssl_dir }}/ca.crt -CAkey {{ _ssl.ssl_dir }}/ca.key -CAcreateserial \
+    -in {{ _ssl.ssl_dir }}/server.csr -out {{ _ssl.ssl_dir }}/server.crt
+  register: replace_csr_crt
+

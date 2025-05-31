@@ -1,0 +1,4 @@
+---
+
+# Ungrade VMware Postgres Patroni Cluster on {{ ansible_distribution }}
+- debug: msg={{"Let's upgrade"}}

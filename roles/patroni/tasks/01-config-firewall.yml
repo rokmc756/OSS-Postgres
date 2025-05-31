@@ -1,0 +1,20 @@
+---
+- name: Stop and Disable Firewalld
+  systemd:
+    name: firewalld
+    state: stopped
+    enabled: false
+  register: disable_firewalld_service
+
+
+- name: Flush IPTables Rules
+  shell: |
+    iptables -F
+  register: flush_iptables_rules
+
+
+- name: List IPTables Rules
+  shell: |
+    iptables -nL
+  register: list_iptables_rules
+

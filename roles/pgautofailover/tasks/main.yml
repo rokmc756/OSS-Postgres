@@ -1,0 +1,80 @@
+---
+- name: Check OS ( PGAutoFailover )
+  fail: msg="Not a Red Hat based system!"
+  when: ansible_os_family != 'RedHat' or ansible_os_family != 'CentOS' or  ansible_os_family != 'Rocky'
+
+
+- name: Set Facts for Package Name and List and Network Range
+  import_tasks: set-facts.yml
+  tags: install, uninstall, enable, disable, deploy, destroy, create, delete, add, stop
+
+
+- name: Stop and Diable Firewalld and SELinux
+  import_tasks: security/disable-security.yml
+  tags: disable, install
+  when: ( security is defined and security == true ) or ( pgautofailover_all is defined and pgautofailover_all == true )
+
+
+- name: Install Common Requirements
+  import_tasks: install-pgsql-pkgs.yml
+  tags: install
+  when: ( pkgs is defined and pkgs == true ) or ( pgautofailover_all is defined and pgautofailover_all == true )
+
+
+- name: Install Monitor Instances
+  import_tasks: deploy-monitor.yml
+  tags: deploy, install
+  when: ((( monitor is defined and monitor == true ) and ( ssl is not defined )) or ( pgautofailover_all is defined and pgautofailover_all == true )) and inventory_hostname in groups['monitor']
+
+
+- name: Install Primary Worker Instances
+  import_tasks: deploy-workers.yml
+  tags: install, deploy
+  when: (( primary is defined and primary == true ) or ( pgautofailover_all is defined and pgautofailover_all == true )) and inventory_hostname in groups['primary']
+
+
+- name: Install Secondary Worker Instances
+  import_tasks: deploy-workers.yml
+  tags: install, deploy
+  when: (( secondary is defined and secondary == true ) or ( pgautofailover_all is defined and pgautofailover_all == true )) and inventory_hostname in groups['secondary']
+
+
+- name: Check the Status of PGAutoFailover
+  import_tasks: check-status-workers.yml
+  tags: install, check
+  when: ( status is defined and status == true ) and ( pgautofailover_all is defined and pgautofailover_all == true )
+
+
+- name: Create Database and Users
+  import_tasks: add-users.yml
+  tags: install, add
+  when: (( user is defined and user == true ) or ( pgautofailover_all is defined and pgautofailover_all == true )) and inventory_hostname in groups['primary']
+
+
+- name: Import Enable SSL Playbook
+  import_tasks: ssl/main.yml
+  when: ( ssl is defined and ssl == true ) or ( pgautofailover_all is defined and pgautofailover_all == true )
+
+
+- name: Stop and Disable PGAutoFailover
+  import_tasks: stop-pgautofailover-service.yml
+  tags: uninstall, destroy, delete, stop
+  when: ( service is defined and service == true ) or ( pgautofailover_all is defined and pgautofailover_all == true )
+
+
+- name: Uninstall PGAutoFailover Packages
+  import_tasks: uninstall-pgsql-pkgs.yml
+  tags: uninstall, destroy, delete
+  when: ( pkgs is defined and pkgs == true ) or ( pgautofailover_all is defined and pgautofailover_all == true )
+
+
+- name: Enable Firewalld and SELinux
+  import_tasks: security/enable-security.yml
+  tags: uninstall, destroy, enable
+  when: ( security is defined and security == true ) or ( pgautofailover_all is defined and pgautofailover_all == true )
+
+
+- name: Upgrade PGAutoFailover
+  import_tasks: upgrade.yml
+  tags: upgrade
+

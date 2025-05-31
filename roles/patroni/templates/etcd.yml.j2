@@ -1,0 +1,11 @@
+name: '<{{ inventory_hostname }}>'
+listen-peer-urls: 'http://{{ hostvars[inventory_hostname][_netdev]['ipv4']['address'] }}:2380'
+listen-client-urls: 'http://{{ hostvars[inventory_hostname][_netdev]['ipv4']['address'] }}:2379,http://127.0.0.1:2379'
+initial-advertise-peer-urls: 'http://{{ hostvars[inventory_hostname][_netdev]['ipv4']['address'] }}:2380'
+advertise-client-urls: 'http://{{ hostvars[inventory_hostname][_netdev]['ipv4']['address'] }}:2379'
+initial-cluster:{{ _etcd.blank }}' {%- for h in groups['workers'] %}
+<{{ hostvars[h]['ansible_hostname'] }}>=http://{{ hostvars[h][_netdev]['ipv4']['address'] }}:2380{% if not loop.last %},{% endif %}
+{% endfor %}'
+initial-cluster-state: 'new'
+initial-cluster-token: 'etcd-cluster-1'
+data-dir: '{{ pgsql.base_dir }}/data'

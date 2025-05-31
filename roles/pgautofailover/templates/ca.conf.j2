@@ -1,0 +1,42 @@
+[ ca ]
+default_ca = myca
+
+[ crl_ext ]
+# issuerAltName=issuer:copy  #this would copy the issuer name to altname
+authorityKeyIdentifier=keyid:always
+
+[ myca ]
+dir = {{ ssl.ssl_dir }}
+new_certs_dir = $dir
+unique_subject = no
+certificate = $dir/ca.crt
+database = $dir/certindex
+private_key = $dir/ca.key
+serial = $dir/certserial
+default_days = 730
+default_md = sha1
+policy = myca_policy
+x509_extensions = myca_extensions
+crlnumber = $dir/crlnumber
+default_crl_days = 730
+
+[ myca_policy ]
+countryName             = match
+stateOrProvinceName     = match
+organizationName        = match
+organizationalUnitName  = optional
+commonName              = supplied
+emailAddress            = optional
+
+[ myca_extensions ]
+basicConstraints = CA:false
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid:always
+keyUsage = digitalSignature,keyEncipherment
+extendedKeyUsage = serverAuth
+crlDistributionPoints = URI:http://jtest.pivotal.io/root.crl
+subjectAltName  = @alt_names
+
+[alt_names]
+DNS.1 = jtest.pivotal.io
+DNS.2 = *.jtest.pivotal.io

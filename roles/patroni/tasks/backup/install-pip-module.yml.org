@@ -1,0 +1,123 @@
+---
+#
+- name: Change permission for /home/postgres directory
+  become: true
+  become_user: root
+  shell: (  chown -R postgres.postgres {{ pgsql.home_dir }} )
+  register: permission_changed
+  ignore_errors: yes
+  when: install_pip_module
+
+#
+- name: Install the python module of dependencies for ETCD on all nodes in workers group
+  become: true
+  become_user: postgres
+  template: src=requirements.txt.{{ pgsql.os_version }}.j2 dest={{ pgsql.base_dir }}/requirements.txt owner=postgres group=postgres mode=644 force=yes
+  register: patroni_prereq_installed
+
+
+#
+#- name: Install Python 3.9 for RHEL or CentOS {{  hostvars[inventory_hostname].ansible_distribution_major_version }}
+#  become: true
+#  yum:
+#    name: "{{ item }}"
+#    state: present
+#    skip_broken: yes
+#  async: 180
+#  poll: 5
+#  with_items:
+#    - python3
+#    - python3-pip
+#    - python3-libs
+#    - python3-devel
+#    - python39
+#    - python39-pip
+#    - python39-libs
+#    - python39-devel
+#  register: python3_installed
+#  when: install_dep_pkgs == true and hostvars[inventory_hostname].ansible_distribution_major_version|int >= 8
+
+#
+- name: Install python modlue for patroni
+  become: true
+  become_user: root
+  shell: (  export PATH=$PATH:/usr/local/bin && pip3 install {{ item }} )
+  async: 180
+  poll: 5
+  register: pip3_python_modules_installed
+  with_items:
+    - "setuptools-rust"
+    - "typing"
+    - "wheel"
+    - "-r /var/lib/pgsql/requirements.txt"
+  when: install_pip_module
+
+#
+- name: Upgrade pip3 version
+  become: true
+  become_user: root
+  shell: (  export PATH=$PATH:/usr/local/bin && pip3 install --upgrade pip )
+  async: 60
+  poll: 5
+  register: pip_upgraded
+  when: install_pip_module
+
+#
+- name: Install python modules for Patroni in VMware Postgres {{ pgsql.major_version }} on all nodes in workers group
+  become: true
+  become_user: root
+  shell: ( export PATH=$PATH:/usr/local/bin && pip3 install {{ item }} )
+  async: 60
+  poll: 5
+  register: pip3_python_modules_for_vmware_postgres_13_and_earlier_versions_installed
+  with_items:
+    - "psycopg2-binary"
+  when:
+    - pgsql.major_version|int <= 13
+    - install_pip_module
+
+#
+- name: Install python modules for Patroni in VMware Postgres {{ pgsql.major_version }} on all nodes in workers group
+  become: true
+  become_user: root
+  shell: ( export PATH=$PATH:/usr/local/bin && pip3 install {{ item }} )
+  async: 60
+  poll: 5
+  register: pip3_python_modules_for_vmware_postgres_14_and_higher_versions_installed
+  with_items:
+    - "pyopenssl"
+    - "pyrsistent==0.16.0"
+  when:
+    - pgsql.major_version|int >= 14
+    - install_pip_module
+
+#
+- name: Install prerequesties of python modules for Patroni
+  become: true
+  become_user: root
+  shell: (  export PATH=$PATH:/usr/local/bin && pip3 install {{ item }} )
+  async: 60
+  poll: 5
+  register: pip3_python_etcd_installed
+  with_items:
+    - "tzlocal"
+    - "requests"
+    - "ydiff"
+    - "psutil"
+    - "prettytable"
+    - "click"
+    - "python-etcd"
+    - "psycopg2"
+  when: install_pip_module
+
+#
+- name: Install patroni pip module
+  become: true
+  become_user: root
+  shell: (  export PATH=$PATH:/usr/local/bin && pip3 install {{ item }} )
+  async: 60
+  poll: 5
+  register: pip3_patroni_installed
+  with_items:
+    - "patroni==3.0.4"
+  when: install_pip_module == true and hostvars[inventory_hostname].ansible_distribution_major_version|int >= 8

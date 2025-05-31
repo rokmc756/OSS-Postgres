@@ -1,0 +1,16 @@
+[Unit]
+After=network.target
+Description=etcd - highly-available key value store
+
+[Service]
+# Uncomment this on ARM64.
+# Environment="ETCD_UNSUPPORTED_ARCH=arm64"
+LimitNOFILE=65536
+Restart=on-failure
+Type=notify
+ExecStart=/usr/bin/etcd --enable-v2=true --config-file {{ pgsql.base_dir }}/etcd.yml
+
+User=postgres
+
+[Install]
+WantedBy=multi-user.target
