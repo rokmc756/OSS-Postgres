@@ -1,0 +1,32 @@
+---
+- name: Stop Standby Postgres
+  service:
+    name: "{{ postgres_service }}"
+    state: stopped
+  register: stop_standby_postgres
+  until: stop_standby_postgres is succeeded
+  retries: 3
+  delay: 10
+
+
+- name: Clone Standby Nodes
+  become_user: "{{ repmgr_postgres_admin_user }}"
+  shell: |
+    /usr/pgsql-{{ postgres_release }}/bin/repmgr -f {{ repmgr_conf_dir }}/{{ repmgr_conf_file }} \
+    -h {{ primary_ipaddr }} -U {{ repmgr_user }} -d {{ repmgr_dbname }} standby clone -F
+  register: clone_standby_nodes
+  until: clone_standby_nodes is succeeded
+  retries: 3
+  delay: 10
+
+
+- name: Start Standby Postgres
+  service:
+    name: "{{ postgres_service }}"
+    state: started
+  register: start_standby_postgres
+  until: start_standby_postgres is succeeded
+  retries: 3
+  delay: 10
+
+

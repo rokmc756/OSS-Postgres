@@ -1,0 +1,38 @@
+###########################################################
+# {{ ansible_managed }}
+###########################################################
+# Replication Manager configuration file for Repmgr 5.x
+###########################################################
+
+
+# Cluster Configuration
+# cluster='jtest01'
+node_id={{ repmgr_node_id }}
+node_name={{ ansible_hostname }}
+
+
+# Postgres Connection
+conninfo='{{ repmgr_conninfo }}'
+
+
+# Common Configuration
+data_directory='{{ postgres_data_directory }}'
+config_directory='{{ postgres_conf_directory }}'
+pg_bindir='{{ repmgr_pg_bindir }}'
+log_file='{{ repmgr_log_file }}'
+
+
+# Logging
+log_level='{{ repmgr_loglevel }}'
+log_facility='{{ repmgr_logfacility }}'
+
+
+# Failover
+failover='{{ repmgr_failover }}'
+promote_command='{{ repmgr_promote_command }}'
+follow_command='{{ repmgr_follow_command }}'
+service_start_command='{{ repmgr_start_command }}'
+service_stop_command='{{ repmgr_stop_command }}'
+service_restart_command='{{ repmgr_restart_command }}'
+
+

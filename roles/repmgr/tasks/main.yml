@@ -1,0 +1,141 @@
+---
+- name: Check OS ( Repmgr )
+  fail: msg="Not a Red Hat based system!"
+  when: ansible_os_family != 'RedHat' or ansible_os_family != 'CentOS' or  ansible_os_family != 'Rocky'
+
+
+- name: Set Facts for Package Name and List and Network Range
+  import_tasks: set-facts.yml
+  tags: install, uninstall, init, enable, disable, config, stop, add, setup, remove, clone, register, unregister, verify
+
+
+- name: Stop and Diable Firewalld and SELinux
+  import_tasks: security/disable-security.yml
+  tags: disable, stop, uninstall
+
+
+- name: Enable Package Repository
+  import_tasks: enable-repo.yml
+  tags: enable, setup, install
+  when: ( repo is defined and repo == true ) or ( repmgr_all is defined and repmgr_all == true )
+
+
+- name: Install PostgreSQL and Repmgr Packages
+  import_tasks: install-pkgs.yml
+  tags: setup, install
+  when: ( pkgs is defined and pkgs == true ) or ( instance is defined and instance == true ) or ( repmgr_all is defined and repmgr_all == true )
+
+
+- name: Initialize PostgreSQL Database
+  import_tasks: init-pgsql.yml
+  tags: init, setup, install
+  when: ( db is defined and db == true ) or ( instance is defined and instance == true ) or ( repmgr_all is defined and repmgr_all == true )
+
+
+- name: Enable SSL
+  import_tasks: enable-ssl.yml
+  tags: enable, setup, install
+  when: ( ssl is defined and ssl == true ) or ( instance is defined and instance == true ) or ( repmgr_all is defined and repmgr_all == true )
+
+
+- name: Add Manual Users and Database
+  import_tasks: add-users.yml
+  tags: add, setup, install
+  when: ( user is defined and user == true ) or ( instance is defined and instance == true ) or ( repmgr_all is defined and repmgr_all == true )
+
+
+- name: Config Repmgr Primary
+  import_tasks: config-instance.yml
+  tags: config, setup, install
+  when: (( primary is defined and primary == true ) or ( repmgr_all is defined and repmgr_all == true )) and inventory_hostname in groups['primary']
+
+
+- name: Config Repmgr Primary
+  import_tasks: config-repmgr.yml
+  tags: config, setup, install
+  when: (( primary is defined and primary == true ) or ( repmgr_all is defined and repmgr_all == true )) and inventory_hostname in groups['primary']
+
+
+- name: Register Repmgr Primary
+  import_tasks: register-primary.yml
+  tags: register, setup, install
+  when: (( primary is defined and primary == true ) or ( repmgr_all is defined and repmgr_all == true )) and inventory_hostname in groups['primary']
+
+
+- name: Config Repmgr on Standby
+  import_tasks: config-repmgr.yml
+  tags: config, setup, install
+  when: (( standby is defined and standby == true ) or ( repmgr_all is defined and repmgr_all == true )) and inventory_hostname in groups['standby']
+
+
+- name: Clone Repmgr Standby
+  import_tasks: clone-standby.yml
+  tags: clone, setup, install
+  when: (( standby is defined and standby == true ) or ( repmgr_all is defined and repmgr_all == true )) and inventory_hostname in groups['standby']
+
+
+- name: Register Repmgr Standby
+  import_tasks: register-standby.yml
+  tags: register, setup, install
+  when: (( standby is defined and standby == true ) or ( repmgr_all is defined and repmgr_all == true )) and inventory_hostname in groups['standby']
+
+
+- name: Config Repmgr Witness
+  import_tasks: config-repmgr.yml
+  tags: config, setup, install
+  when: (( witness is defined and witness == true ) or ( repmgr_all is defined and repmgr_all == true )) and inventory_hostname in groups['witness']
+
+
+- name: Config Repmgr Witness
+  import_tasks: config-instance.yml
+  tags: config, setup, install
+  when: (( witness is defined and witness == true ) or ( repmgr_all is defined and repmgr_all == true )) and inventory_hostname in groups['witness']
+
+
+- name: Register Repmgr Witness
+  import_tasks: register-witness.yml
+  tags: register, setup, install
+  when: (( witness is defined and witness == true ) or ( repmgr_all is defined and repmgr_all == true )) and inventory_hostname in groups['witness']
+
+
+- name: Verify Repmgr Cluster
+  import_tasks: verify-cluster.yml
+  tags: verify, install
+  when: ( cluster is defined and cluster == true ) or ( repmgr_all is defined and repmgr_all == true )
+
+
+- name: Unregister Repmgr Witness
+  import_tasks: unregister-witness.yml
+  tags: unregister, uninstall
+  when: (( witness is defined and witness == true ) or ( cluster is defined and cluster == true ) or ( repmgr_all is defined and repmgr_all == true )) and inventory_hostname in groups['witness']
+
+
+- name: Unregister Repmgr Standby
+  import_tasks: unregister-standby.yml
+  tags: unregister, uninstall
+  when: (( standby is defined and standby == true ) or ( cluster is defined and cluster == true ) or ( repmgr_all is defined and repmgr_all == true )) and inventory_hostname in groups['standby']
+
+
+- name: Unregister Repmgr Primary
+  import_tasks: unregister-primary.yml
+  tags: unregister, uninstall
+  when: (( primary is defined and primary == true ) or ( cluster is defined and cluster == true ) or ( repmgr_all is defined and repmgr_all == true )) and inventory_hostname in groups['primary']
+
+
+- name: Uninitialize PostgreSQL Database
+  import_tasks: uninit-pgsql.yml
+  tags: uninit, uninstall, remove
+  when: ( db is defined and db == true ) or ( instance is defined and instance == true ) or ( repmgr_all is defined and repmgr_all == true )
+
+
+- name: Uninstall Repmgr Packages
+  import_tasks: uninstall-pkgs.yml
+  tags: uninstall, remove
+  when: ( pkgs is defined and pkgs == true ) or ( instance is defined and instance == true ) or ( repmgr_all is defined and repmgr_all == true )
+
+
+- name: Disable Package Repository
+  import_tasks: disable-repo.yml
+  tags: disable, remove, uninstall
+  when: ( repo is defined and repo == true ) or ( repmgr_all is defined and repmgr_all == true )
+

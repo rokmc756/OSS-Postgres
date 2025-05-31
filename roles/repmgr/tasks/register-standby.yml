@@ -1,0 +1,17 @@
+---
+- name: Register Standby Node
+  become: true
+  become_user: "{{ repmgr_postgres_admin_user }}"
+  shell: |
+    /usr/pgsql-{{ postgres_release }}/bin/repmgr -f {{ repmgr_conf_dir }}/{{ repmgr_conf_file }} standby register
+  register: register_standby_node
+
+
+- name: Check the Status of the Repmgr Cluster
+  become_user: "{{ repmgr_postgres_admin_user }}"
+  shell: |
+    /usr/pgsql-{{ postgres_release }}/bin/repmgr -f {{ repmgr_conf_dir }}/{{ repmgr_conf_file }} cluster show
+  register: check_cluster_status
+- debug: msg={{ check_cluster_status }}
+
+

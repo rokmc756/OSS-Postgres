@@ -1,0 +1,21 @@
+[Unit]
+Description=Replication Manager Daemon
+Documentation=https://repmgr.org
+After=network.target postgresql.service
+Wants=postgresql.service
+
+
+[Service]
+Type=forking
+User=postgres
+Group=postgres
+ExecStart=/usr/pgsql-{{ postgres_release }}/bin/repmgrd -f /etc/repmgr/{{ postgres_release }}/repmgr.conf
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+Restart=on-failure
+RestartSec=5s
+
+
+[Install]
+WantedBy=multi-user.target
+

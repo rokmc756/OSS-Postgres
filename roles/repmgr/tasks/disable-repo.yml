@@ -1,0 +1,25 @@
+---
+- name: Uninstall EPEL Package Repository
+  package:
+    name: epel-release
+    state: absent
+  register: uninstall_epel_pkg_repo
+- debug: msg={{ uninstall_epel_pkg_repo }}
+  when: print_debug == true
+
+
+- name: Disable PostgreSQL Repository
+  yum_repository:
+    name: "{{ postgres_repo_name }}"
+    description: PostgreSQL repository
+    baseurl: "{{ postgres_repo }}"
+    state: absent
+
+
+- name: Update Caches for DNF Packages
+  shell: |
+    dnf makecache -y
+  register: update_dnf_cache
+- debug: msg={{ update_dnf_cache }}
+  when: print_debug == true
+

@@ -1,0 +1,15 @@
+---
+- name: Register Witness Node
+  become_user: "{{ repmgr_postgres_admin_user }}"
+  shell: |
+    /usr/pgsql-{{ postgres_release }}/bin/repmgr -f {{ repmgr_conf_dir }}/{{ repmgr_conf_file }} witness register -h {{ primary_ipaddr }} -F
+  register: register_witness_node
+
+
+- name: Check the Status of the Repmgr Cluster
+  become_user: "{{ repmgr_postgres_admin_user }}"
+  shell: |
+    /usr/pgsql-{{ postgres_release }}/bin/repmgr -f {{ repmgr_conf_dir }}/{{ repmgr_conf_file }} cluster show
+  register: check_cluster_status
+- debug: msg={{ check_cluster_status }}
+

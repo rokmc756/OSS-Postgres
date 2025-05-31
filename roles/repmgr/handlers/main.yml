@@ -1,0 +1,48 @@
+---
+- name: Waiting for Server to Come Back After Reboot
+  local_action: wait_for host={{ hostvars[inventory_hostname].ansible_ssh_host }} port=22 state=started delay=10 timeout=300 connect_timeout=300 search_regex=OpenSSH
+  become: no
+
+
+- name: Restart System
+  shell: ( /bin/sleep 5 ; /sbin/shutdown -r now "Ansible Updates Triggered" ) &
+  async: 30
+  poll: 0
+
+
+- name: Restart Repmgrd
+  service:
+    name: "{{ repmgr_service }}"
+    state: restarted
+
+
+- name: Start Repmgrd
+  service:
+    name: "{{ repmgr_service }}"
+    state: started
+
+
+- name: Stop Repmgrd
+  service:
+    name: "{{ repmgr_service }}"
+    state: stop
+
+
+- name: Reload Repmgrd
+  service:
+    name: "{{ repmgr_service }}"
+    state: reloaded
+
+
+- name: Stop Postgresql
+  service:
+    name: "{{ postgres_service }}"
+    state: stopped
+
+
+- name: Start Postgresql
+  service:
+    name: "{{ postgres_service }}"
+    state: started
+
+

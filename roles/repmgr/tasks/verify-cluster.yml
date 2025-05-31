@@ -1,0 +1,8 @@
+---
+- name: Verify Node Status
+  become_user: "{{ repmgr_postgres_admin_user }}"
+  shell: |
+    /usr/pgsql-{{ postgres_release }}/bin/repmgr -f {{ repmgr_conf_dir }}/{{ repmgr_conf_file }} node check
+  register: verify_node_status
+- debug: msg={{ verify_node_status }}
+

@@ -1,0 +1,40 @@
+---
+- name: Set SELinux Permissive Mode
+  shell: |
+    setenforce 0
+    sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
+  when: ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky"
+
+
+- name: Enable Firewalld
+  systemd:
+    name: firewalld
+    state: started
+    enabled: yes
+
+
+- name: Allow Kubernetes Service Ports for Master Node
+  firewalld:
+    permanent: yes
+    immediate: yes
+    port: "{{ item.port }}/{{ item.proto }}"
+    state: "{{ item.state }}"
+    zone: "{{ item.zone }}"
+  with_items: "{{ master_ports }}"
+  when: inventory_hostname in groups['master']
+
+#
+- name: Allow Kubernetes Service Ports for Workder Nodes
+  firewalld:
+    permanent: yes
+    immediate: yes
+    port: "{{ item.port }}/{{ item.proto }}"
+    state: "{{ item.state }}"
+    zone: "{{ item.zone }}"
+  with_items: "{{ workers_ports }}"
+  when: inventory_hostname in groups['workers']
+
+
+- name: Reload Firewalld
+  command: firewall-cmd --reload
+

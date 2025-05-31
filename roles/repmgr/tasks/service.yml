@@ -1,0 +1,7 @@
+---
+- name: Ensure Repmgr Service is Running and Enabled
+  service:
+    name: "{{ repmgr_service }}"
+    state: started
+    enabled: true
+

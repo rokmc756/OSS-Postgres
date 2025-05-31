@@ -1,0 +1,97 @@
+---
+- name: Replace PostgreSQL Config
+  become_user: postgres
+  replace:
+    path: "{{ pgsql.base_dir }}/17/data/postgresql.conf"
+    regexp: "{{ item.regexp }}"
+    replace: "{{ item.replace }}"
+    backup: yes
+  register: replace_postgresql_conf
+  with_items:
+    - { regexp: "^#max_wal_senders = 10",           replace: "max_wal_senders = 10",                 state: present }
+    - { regexp: "^#max_replication_slots = 10",     replace: "max_replication_slots = 10",           state: present }
+    - { regexp: "^#wal_level = replica",            replace: "wal_level = replica",                  state: present }
+    - { regexp: "^#hot_standby = on",               replace: "hot_standby = on",                     state: present }
+    - { regexp: "^#archive_mode = off",             replace: "archive_mode = off",                   state: present }
+    - { regexp: "^#archive_command = ''",           replace: "archive_command = '/bin/true'",        state: present }
+    - { regexp: "^#shared_preload_libraries = ''",  replace: "shared_preload_libraries = 'repmgr'",  state: present }
+
+
+- name: Create Repmgr Database
+  become_user: postgres
+  postgresql_db: name=repmgr
+       template='template0'
+       state=present
+       login_unix_socket=/tmp
+  register: create_database
+  vars:
+    ansible_python_interpreter: "{{ yum_python_version }}"
+
+
+- name: Ensure User Has Access to the New Database
+  become_user: postgres
+  postgresql_user: db=repmgr
+       name=repmgr
+       password=changeme
+       priv=ALL
+       state=present
+       login_unix_socket=/tmp
+  register: create_user
+  vars:
+    ansible_python_interpreter: "{{ yum_python_version }}"
+
+
+- name: Ensure User Does Not Have Unnecessary Permissions
+  become_user: postgres
+  postgresql_user: name=repmgr
+       role_attr_flags=SUPERUSER,CREATEDB,CREATEROLE,INHERIT,LOGIN,REPLICATION
+       state=present
+       login_unix_socket=/tmp
+  register: enroll_permission
+  vars:
+    ansible_python_interpreter: "{{ yum_python_version }}"
+
+
+#- name: Stop Postgres Instance manually to Apply Systemd Unit
+#  become_user: postgres
+#  shell: |
+#    /usr/pgsql-17/bin/pg_ctl stop -D {{ pgsql.base_dir }}/17/data -s -m fast
+#  register: stop_postgres_instance
+
+
+#- name: Reload and Start PostgreSQL through Systemd
+#  systemd:
+#    daemon_reexec: true
+#    daemon_reload: true
+#    name: postgresql-17
+#    enabled: true
+#    state: started
+#  register: restart_postgresql_systemd
+
+
+- name: Configure PostgreSQL Config for Repmgr
+  become_user: postgres
+  lineinfile:
+    dest: "{{ pgsql.base_dir }}/17/data/{{ item.file }}"
+    line: "{{ item.line }}"
+    state: "{{ item.state }}"
+  with_items:
+    - { file: "pg_hba.conf",   line: "local    replication    repmgr    trust",                               state: present }
+    - { file: "pg_hba.conf",   line: "host     replication    repmgr    127.0.0.1/32     trust",              state: present }
+    - { file: "pg_hba.conf",   line: "host     replication    repmgr    {{ pgsql_network_range }}   trust",   state: present }
+    - { file: "pg_hba.conf",   line: "local    repmgr         repmgr    trust",                               state: present }
+    - { file: "pg_hba.conf",   line: "host     repmgr         repmgr    127.0.0.1/32     trust",              state: present }
+    - { file: "pg_hba.conf",   line: "host     repmgr         repmgr    {{ pgsql_network_range }}   trust",   state: present }
+  register: config_postgresql_conf
+
+
+- name: Reload and Restart PostgreSQL through Systemd
+  systemd:
+    daemon_reexec: true
+    daemon_reload: true
+    name: postgresql-17
+    enabled: true
+    state: restarted
+  register: restart_postgresql_systemd
+
+

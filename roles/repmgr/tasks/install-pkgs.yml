@@ -1,0 +1,46 @@
+---
+#- name: Ensure PostgreSQL Repository
+#  yum_repository:
+#    name: "{{ postgres_repo_name }}"
+#    description: PostgreSQL repository
+#    baseurl: "{{ postgres_repo }}"
+#  # when: repmgr_install_postgresql|bool
+
+
+#- name: Download and Install GPG Key
+#  rpm_key:
+#    state: present
+#    key: https://ftp.postgresql.org/pub/repos/yum/keys/PGDG-RPM-GPG-KEY-RHEL
+#  # when: repmgr_install_postgresql|bool
+#  # key: https://download.postgresql.org/pub/repos/yum/keys/RPM-GPG-KEY-PGDG
+
+
+- name: Ensure PostgreSQL Packages are Installed
+  yum:
+    name: "{{ postgresql_server_package }}"
+    state: present
+    enablerepo: "{{ postgres_repo_name }}"
+  # when: repmgr_install_postgresql|bool
+
+
+#- name: Install Repmgr Yum Repository
+#  yum_repository:
+#    name: "repmgr_{{ postgres_release }}"
+#    description: 2ndquadrant yum repo
+#    baseurl: "{{ repmgr_repository }}"
+#  # when: repmgr_install_repository
+
+
+#- name: Download and Install GPG Key
+#  rpm_key:
+#    state: present
+#    key: https://dl.2ndquadrant.com/gpg-key.asc
+  # when: repmgr_install_postgresql|bool
+
+
+- name: Install Repmgr Packages
+  yum:
+    name: "{{ repmgr_package }}"
+    state: present
+
+

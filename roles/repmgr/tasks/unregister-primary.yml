@@ -1,0 +1,7 @@
+---
+- name: Unregister Primary Node
+  become_user: "{{ repmgr_postgres_admin_user }}"
+  shell: |
+    /usr/pgsql-{{ postgres_release }}/bin/repmgr -f {{ repmgr_conf_dir }}/{{ repmgr_conf_file }} primary unregister -F
+  register: unregister_primary_node
+
