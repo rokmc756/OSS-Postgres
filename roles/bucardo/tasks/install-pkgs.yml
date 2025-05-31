@@ -1,0 +1,45 @@
+---
+- name: Ensure PostgreSQL Repository
+  yum_repository:
+    name: "{{ postgres_repo_name }}"
+    description: PostgreSQL repository
+    baseurl: "{{ postgres_repo }}"
+  # when: bucardo_install_postgresql|bool
+
+
+- name: Download and Install GPG Key
+  rpm_key:
+    state: present
+    key: https://ftp.postgresql.org/pub/repos/yum/keys/PGDG-RPM-GPG-KEY-RHEL
+  # when: bucardo_install_postgresql|bool
+  # key: https://download.postgresql.org/pub/repos/yum/keys/RPM-GPG-KEY-PGDG
+
+
+- name: Ensure PostgreSQL Packages are Installed
+  yum:
+    name: "{{ postgresql_server_package }}"
+    state: present
+    enablerepo: "{{ postgres_repo_name }}"
+  # when: bucardo_install_postgresql|bool
+
+
+#- name: Install bucardo Yum Repository
+#  yum_repository:
+#    name: "bucardo_{{ postgres_release }}"
+#    description: 2ndquadrant yum repo
+#    baseurl: "{{ bucardo_repository }}"
+#  # when: bucardo_install_repository
+
+
+#- name: Download and Install GPG Key
+#  rpm_key:
+#    state: present
+#    key: https://dl.2ndquadrant.com/gpg-key.asc
+  # when: bucardo_install_postgresql|bool
+
+
+- name: Install Bucardo Packages
+  yum:
+    name: "{{ bucardo_package }}"
+    state: present
+

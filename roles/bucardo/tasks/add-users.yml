@@ -1,0 +1,68 @@
+---
+- name: Create the Databases
+  become_user: postgres
+  postgresql_db: name={{ item.db_name }}
+       template='template0'
+       state=present
+       login_unix_socket=/tmp
+  register: create_database
+  vars:
+    ansible_python_interpreter: "{{ yum_python_version }}"
+  with_items:
+    - { db_name: "testdb" }
+    - { db_name: "bucardo" }
+    - { db_name: "pgsql_testdb" }
+
+
+- name: Ensure User Has Access to Databases
+  become_user: postgres
+  postgresql_user: db={{ item.db_name }}
+       name={{ item.db_user }}
+       password={{ item.db_password }}
+       priv=ALL
+       state=present
+       login_unix_socket=/tmp
+  register: create_user
+  vars:
+    ansible_python_interpreter: "{{ yum_python_version }}"
+  with_items:
+    - { db_name: "testdb",        db_user: "bucardo",  db_password: "changeme" }
+    - { db_name: "bucardo",       db_user: "bucardo",  db_password: "changeme" }
+    - { db_name: "pgsql_testdb",  db_user: "jomoon",   db_password: "changeme" }
+
+
+- name: Ensure User Does Not Have Unnecessary Permissions
+  become_user: postgres
+  postgresql_user: name={{ item.db_user }}
+       role_attr_flags=SUPERUSER,CREATEDB,CREATEROLE,INHERIT,LOGIN,REPLICATION
+       state=present
+       login_unix_socket=/tmp
+  register: enroll_permission
+  vars:
+    ansible_python_interpreter: "{{ yum_python_version }}"
+  with_items:
+    - { db_name: "testdb",        db_user: "bucardo",  db_password: "changeme" }
+    - { db_name: "bucardo",       db_user: "bucardo",  db_password: "changeme" }
+    - { db_name: "pgsql_testdb",  db_user: "jomoon",   db_password: "changeme" }
+
+
+- name: Enable and Restart PostgreSQL
+  systemd:
+    daemon_reexec: true
+    daemon_reload: true
+    name: postgresql-{{ postgres_release }}
+    enabled: true
+    state: restarted
+  register: restart_postgresql_systemd
+
+# role_attr_flags=NOSUPERUSER,NOCREATEDB
+# role_attr_flags
+# [NO]SUPERUSER
+# [NO]CREATEROLE
+# [NO]CREATEDB
+# [NO]INHERIT
+# [NO]LOGIN
+# [NO]REPLICATION
+# [NO]BYPASSRLS
+# https://docs.ansible.com/ansible/2.8/modules/postgresql_user_module.html
+

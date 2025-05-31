@@ -1,0 +1,97 @@
+---
+- name: Check if DBIx Safe Tarball File Already Exists
+  stat: path={{ _dbix_safe.base_path }}/DBIx-Safe-{{ dbix_safe_version }}.{{ _dbix_safe.bin_type }}
+  register: dbix_safe_tarball_exists
+- debug: msg={{ dbix_safe_tarball_exists }}
+
+
+- name: Check if DBIx Safe Installation Directory Already Exists
+  stat: path={{ _dbix_safe.base_path }}/DBIx-Safe-{{ dbix_safe_version }}
+  register: dbix_safe_install_dir_exists
+
+
+- name: Sanity Check for Existence of "{{ _dbix_safe.base_path }}/DBIx-Safe-{{ dbix_safe_version }}.{{ _dbix_safe.bin_type }}" File or "{{ _dbix_safe.base_path }}/DBIx-Safe-{{ dbix_safe_version }}" Directory
+  debug: msg="Both {{ _dbix_safe.base_path }}/DBIx-Safe-{{ dbix_safe_version }}.{{ _dbix_safe.bin_type }} File and {{ _dbix_safe.base_path }}/DBIx-Safe-{{ dbix_safe_version }} Directory already Exists"
+  changed_when: dbix_safe_tarball_exists.stat.exists == True and dbix_safe_install_dir_exists.stat.exists == True
+
+
+- name: Copy DBIx Safe Tarball from Local Directory, roles/bucardo/files
+  copy: src=DBIx-Safe-{{ dbix_safe_version }}.{{ _dbix_safe.bin_type }} dest={{ _dbix_safe.base_path }}/DBIx-Safe-{{ dbix_safe_version }}.{{ _dbix_safe.bin_type }} mode=0644 owner=root group=root
+  register: local_copy_buckardo
+  when: _dbix_safe.download == false and dbix_safe_tarball_exists.stat.exists != True
+
+
+- name: Download DBIx Safe Tarball File
+  shell: |
+    wget -P {{ _dbix_safe.base_path }} --show-progress --auth-no-challenge https://dbix-safe.org/downloads/DBIx-Safe-{{ dbix_safe_version }}.{{ _dbix_safe.bin_type }}
+  register: download_dbix_safe_tarball
+  when: _dbix_safe.download == true and dbix_safe_tarball_exists.stat.exists == false
+
+
+# https://xxxxxxxxxxxxxxxx:@get.weka.io/dist/v1/pkg/{{ weka_file_name }}.tar
+#- name: Download weka tarball file
+#  get_url:
+#    url: "{{ server_url }}"
+#    dest: "{{ _weka.base_path }}/{{ weka_file_name }}.tar"
+#    owner: root
+#    group: root
+#    mode: 0755
+#  when: _weka.download == true and weka_tarball_exists.stat.exists == false
+
+
+- name: Unarchive DBIx Safe Tarball
+  unarchive:
+    src: "{{ _dbix_safe.base_path }}/DBIx-Safe-{{ dbix_safe_version }}.{{ _dbix_safe.bin_type }}"
+    dest: "{{ _dbix_safe.base_path }}"
+    owner: "root"
+    group: "root"
+    mode: "0755"
+    remote_src: yes
+  register: unarchive_dbix_safe_tarball
+  when: dbix_safe_install_dir_exists.stat.exists == false
+
+
+- name: Install DBIx Safe Makefile
+  shell: |
+    perl Makefile.PL
+  register: install_dbix_safe_makefile
+  args:
+    executable: /bin/bash
+    chdir: "{{ _dbix_safe.base_path }}/DBIx-Safe-{{ dbix_safe_version }}"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+
+
+- name: Make DBIx Safe Binary
+  shell: |
+    make
+  register: make_perl_dbix_safe_bin
+  args:
+    executable: /bin/bash
+    chdir: "{{ _dbix_safe.base_path }}/DBIx-Safe-{{ dbix_safe_version }}"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+
+
+- name: Test DBIx Safe Binary
+  shell: |
+    make test
+  register: make_test_perl_dbix_safe_bin
+  args:
+    executable: /bin/bash
+    chdir: "{{ _dbix_safe.base_path }}/DBIx-Safe-{{ dbix_safe_version }}"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+
+
+- name: Install DBIx Safe Binary
+  shell: |
+    make install
+  register: install_perl_dbix_safe_bin
+  args:
+    executable: /bin/bash
+    chdir: "{{ _dbix_safe.base_path }}/DBIx-Safe-{{ dbix_safe_version }}"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+
+

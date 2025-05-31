@@ -1,0 +1,94 @@
+---
+- name: Check OS ( bucardo )
+  fail: msg="Not a Red Hat based system!"
+  when: ansible_os_family != 'RedHat' or ansible_os_family != 'CentOS' or  ansible_os_family != 'Rocky'
+
+
+- name: Set Facts for Package Name and List and Network Range
+  import_tasks: set-facts.yml
+  tags: install, uninstall, init, enable, disable, config, stop, add, setup, remove, clone, register, unregister, verify, create, delete
+
+
+- name: Stop and Diable Firewalld and SELinux
+  import_tasks: security/disable-security.yml
+  tags: disable, stop, uninstall
+
+
+- name: Enable Package Repository
+  import_tasks: enable-repo.yml
+  tags: enable, setup, install
+  when: ( repo is defined and repo == true ) or ( bucardo_all is defined and bucardo_all == true )
+
+
+- name: Install PostgreSQL and bucardo Packages
+  import_tasks: install-pkgs.yml
+  tags: setup, install
+  when: ( pkgs is defined and pkgs == true ) or ( instance is defined and instance == true ) or ( bucardo_all is defined and bucardo_all == true )
+
+
+- name: Initialize PostgreSQL Database
+  import_tasks: init-pgsql.yml
+  tags: init, setup, install
+  when: ( db is defined and db == true ) or ( instance is defined and instance == true ) or ( bucardo_all is defined and bucardo_all == true )
+
+
+- name: Enable SSL
+  import_tasks: enable-ssl.yml
+  tags: enable, setup, install
+  when: ( ssl is defined and ssl == true ) or ( instance is defined and instance == true ) or ( bucardo_all is defined and bucardo_all == true )
+
+
+- name: Config Bucardo Instance
+  import_tasks: config-instance.yml
+  tags: config, setup, install
+  when: ( instance is defined and instance == true ) or ( bucardo_all is defined and bucardo_all == true )
+
+
+- name: Add Manual Users and Database
+  import_tasks: add-users.yml
+  tags: add, setup, install
+  when: ( user is defined and user == true ) or ( instance is defined and instance == true ) or ( bucardo_all is defined and bucardo_all == true )
+
+
+- name: Create Custom Database and Table
+  import_tasks: create-table.yml
+  tags: create, install
+  when: ( table is defined and table == true ) or ( bucardo_all is defined and bucardo_all == true )
+
+
+- name: Install Bucardo
+  import_tasks: install-bucardo.yml
+  tags: setup, install
+  when: ( bin is defined and bin == true ) or ( bucardo_all is defined and bucardo_all == true )
+
+
+- name: Install Perl DBIx Safe
+  import_tasks: install-dbix-safe.yml
+  tags: setup, install
+  when: ( bin is defined and bin == true ) or ( bucardo_all is defined and bucardo_all == true )
+
+
+- name: Config Bucardo Multi Master Replication
+  import_tasks: config-bucardo.yml
+  tags: config, install
+  when: ( mmr is defined and mmr == true ) or ( bucardo_all is defined and bucardo_all == true )
+
+
+- name: Uninitialize PostgreSQL Database
+  import_tasks: uninit-pgsql.yml
+  tags: uninit, uninstall, remove
+  when: ( db is defined and db == true ) or ( instance is defined and instance == true ) or ( bucardo_all is defined and bucardo_all == true )
+
+
+- name: Uninstall Bucardo Packages
+  import_tasks: uninstall-pkgs.yml
+  tags: uninstall, remove
+  when: ( pkgs is defined and pkgs == true ) or ( instance is defined and instance == true ) or ( bucardo_all is defined and bucardo_all == true )
+
+
+- name: Disable Package Repository
+  import_tasks: disable-repo.yml
+  tags: disable, remove, uninstall
+  when: ( repo is defined and repo == true ) or ( bucardo_all is defined and bucardo_all == true )
+
+

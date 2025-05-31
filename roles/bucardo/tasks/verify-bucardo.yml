@@ -1,0 +1,61 @@
+# Verify Multi-Master Replication PostgreSQL Server
+# With the PostgreSQL Multi-Master configured, this means that both PostgreSQL will are synchronized with each other and bot servers accept READ and WRITE operations. In this example, you will verify the PostgreSQL multi-master deployment by inserting new data into the database 'test'.
+# First, on the postgres01 server, log in to the PostgreSQL shell and connect to the database 'testdb.
+sudo -u postgres psql
+\c testdb
+
+# Enter the following queries to insert new data to the table 'users'.
+INSERT INTO users(id, first_name, last_name, city)
+VALUES 
+(1, 'Alice', 'Wonderland', 'Sweden'),
+(2, 'Bob', 'Rista', 'Romania'),
+(3, 'John', 'Bonas', 'England');
+
+# add data postgres01
+# Verify and retrieve your data via the select query below. You should see that your data is available.
+select count(*) from users;
+select * from users;
+verify data postgres01
+
+# Type 'quit' to exit from the PostgreSQL shell.
+# Then, verify the Bucardo synchronization status using the 'bucardo' command below.
+$ bucardo status
+
+# On the 'Last I/D' section, you will see the last data synchronization between the PostgreSQL servers.
+# status after sync
+#
+# Now move to the postgres02 server, access the PostgreSQL shell, then connect to the database 'testdb'.
+sudo -u postgres psql
+\c testdb
+
+# Retrieve the data that is available on the table 'users' using the following query. You should see your data are available and replicated from the postgres01 server.
+select count(*) from users;
+select * from users;
+
+# show data postgres01
+# Next, enter the following queries to add another data and type 'quit' to exit from the PostgreSQL shell.
+INSERT INTO users(id, first_name, last_name, city)
+VALUES 
+(4, 'Ian', 'Gibson', 'Liverpool'),
+(5, 'Tom', 'Riddle', 'Paris'),
+(6, 'Jared', 'Dunn', 'New York');
+
+# quit
+# insert data postgres02
+# Now move back to the postgres01 server and run the following bucardo command to verify the synchronization status.
+bucardo status
+
+# You should see that on 'testdbSrv2' the last synchronization is 3. YOu can see this in the 'Last I/D' section.
+bucardo status
+
+# Now log in again to the PostgreSQL shell and connect to the database 'testdb'.
+sudo -u postgres psql
+\c testdb
+
+# Then verify the list of available data on the table 'users'. You should see additional data that you've added from the postgres02 server.
+select count(*) from users;
+select * from users;
+show updated data
+
+# With this, you have now configured multi-master PostgreSQL replications via Bucardo on Ubuntu 22.04 servers.
+

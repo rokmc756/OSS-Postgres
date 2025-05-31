@@ -1,0 +1,47 @@
+---
+- name: Replace PostgreSQL Config
+  become_user: postgres
+  replace:
+    path: "{{ pgsql.base_dir }}/{{ postgres_release }}/data/postgresql.conf"
+    regexp: "{{ item.regexp }}"
+    replace: "{{ item.replace }}"
+    backup: yes
+  register: replace_postgresql_conf
+  with_items:
+    - { regexp: "^#listen_addresses = 'localhost'",  replace: "listen_addresses = 'localhost, {{ _ipaddr }}'",  state: present }
+    - { regexp: "^#wal_level = replica",             replace: "wal_level = replica",                            state: present }
+
+ #  - { regexp: "^#max_replication_slots = 10",     replace: "max_replication_slots = 10",           state: present }
+ #  - { regexp: "^#hot_standby = on",               replace: "hot_standby = on",                     state: present }
+ #  - { regexp: "^#archive_mode = off",             replace: "archive_mode = off",                   state: present }
+ #  - { regexp: "^#archive_command = ''",           replace: "archive_command = '/bin/true'",        state: present }
+ #  - { regexp: "^#shared_preload_libraries = ''",  replace: "shared_preload_libraries = 'bucardo'",  state: present }
+
+
+- name: Configure PostgreSQL Config for bucardo
+  become_user: postgres
+  lineinfile:
+    dest: "{{ pgsql.base_dir }}/{{ postgres_release }}/data/{{ item.file }}"
+    line: "{{ item.line }}"
+    state: "{{ item.state }}"
+  register: config_postgresql_conf
+  with_items:
+    - { file: "pg_hba.conf",   line: "local    all    postgres   peer",                              state: present }
+    - { file: "pg_hba.conf",   line: "local    all    bucardo    peer",                              state: present }
+    - { file: "pg_hba.conf",   line: "local    all    all        trust",                              state: present }
+    - { file: "pg_hba.conf",   line: "local    all    postgres   trust",                              state: present }
+    - { file: "pg_hba.conf",   line: "local    all    bucardo    trust",                              state: present }
+    - { file: "pg_hba.conf",   line: "host     all    postgres   {{ pgsql_network_range }}  trust",   state: present }
+    - { file: "pg_hba.conf",   line: "host     all    bucardo    {{ pgsql_network_range }}  trust",   state: present }
+
+
+- name: Reload and Restart PostgreSQL through Systemd
+  systemd:
+    daemon_reexec: true
+    daemon_reload: true
+    name: postgresql-{{ postgres_release }}
+    enabled: true
+    state: restarted
+  register: restart_postgresql_systemd
+
+

@@ -1,0 +1,7 @@
+---
+- name: Ensure Bucardo Service is Running and Enabled
+  service:
+    name: "{{ bucardo_service }}"
+    state: started
+    enabled: true
+

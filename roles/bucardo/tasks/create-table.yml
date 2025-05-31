@@ -1,0 +1,73 @@
+---
+- name: Create a New Table Users
+  become_user: postgres
+  postgresql_query:
+    db: "{{ item }}"
+    login_host: "{{ inventory_hostname }}"
+    login_user: "{{ _bucardo.db_user }}"
+    login_password: "{{ _bucardo.db_password }}"
+    query: "CREATE TABLE users (
+        id SERIAL PRIMARY KEY,
+        first_name VARCHAR(255),
+        last_name VARCHAR(255) NOT NULL,
+        city VARCHAR(255)
+      );"
+  register: create_new_table_users
+  ignore_errors: true
+  with_items:
+    - testdb
+- debug: msg={{ create_new_table_users }}
+
+
+- name: Verify the List of Available Data on the Table
+  become_user: postgres
+  postgresql_query:
+    db: "{{ item }}"
+    login_host: "{{ inventory_hostname }}"
+    login_user: "{{ _bucardo.db_user }}"
+    login_password: "{{ _bucardo.db_password }}"
+    query: "select * from users;"
+  register: verify_list_available_data
+  ignore_errors: true
+  with_items:
+    - testdb
+- debug: msg={{ verify_list_available_data }}
+
+
+#- name: Create Table in Postgresql Bucardo Database
+#  become_user: postgres
+#  postgresql_query:
+#    db: testdb
+#    login_host: "{{ inventory_hostname }}"
+#    login_user: "{{ _bucardo.db_user }}"
+#    login_password: "{{ _bucardo.db_password }}"
+#    query: "{{ item }}"
+#  register: verify_list_available_data
+#  with_items:
+#    - "CREATE SCHEMA bucardo;"
+#    - "CREATE TABLE bucardo.bucardo_truncate_trigger ( tablename  OID  NOT NULL, sname  TEXT  NOT NULL, tname TEXT  NOT NULL, sync  TEXT  NOT NULL, replicated  TIMESTAMPTZ  NULL, cdate TIMESTAMPTZ NOT NULL DEFAULT now() );"
+#- debug: msg={{ verify_list_available_data }}
+
+
+- name: Create Table in Postgresql Bucardo Database
+  become_user: postgres
+  postgresql_query:
+    db: testdb
+    login_host: "{{ inventory_hostname }}"
+    login_user: "{{ _bucardo.db_user }}"
+    login_password: "{{ _bucardo.db_password }}"
+    query: "{{ item }}"
+  register: verify_list_available_data
+  with_items:
+    - "CREATE EXTENSION plperl;"
+    - "CREATE SCHEMA bucardo;"
+    - "CREATE TABLE bucardo.bucardo_config ( name  TEXT  NOT NULL, setting  TEXT NOT NULL, about  TEXT  NULL, type TEXT NULL, item TEXT NULL, cdate  TIMESTAMPTZ  NOT NULL DEFAULT now() );"
+    - "COMMENT ON TABLE bucardo.bucardo_config IS $$Contains configuration variables for a specific Bucardo instance$$;"
+    - "CREATE UNIQUE INDEX bucardo_config_unique ON bucardo.bucardo_config(LOWER(name)) WHERE item IS NULL;"
+    - "CREATE UNIQUE INDEX bucardo_config_unique_name ON bucardo.bucardo_config(name,item,type) WHERE item IS NOT NULL;"
+    - "ALTER TABLE bucardo.bucardo_config ADD CONSTRAINT valid_config_type CHECK (type IN ('sync','goat'));"
+    - "ALTER TABLE bucardo.bucardo_config ADD CONSTRAINT valid_config_isolation_level CHECK (name <> 'isolation_level' OR (setting IN ('serializable','repeatable read')));"
+    - "CREATE TABLE bucardo.bucardo_truncate_trigger ( tablename  OID  NOT NULL, sname  TEXT  NOT NULL, tname TEXT  NOT NULL, sync  TEXT  NOT NULL, replicated  TIMESTAMPTZ  NULL, cdate TIMESTAMPTZ NOT NULL DEFAULT now() );"
+- debug: msg={{ verify_list_available_data }}
+
+

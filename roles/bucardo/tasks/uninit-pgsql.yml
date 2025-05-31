@@ -1,0 +1,25 @@
+---
+- name: Stop and Disable PostgreSQL
+  systemd:
+    daemon_reexec: true
+    daemon_reload: true
+    name: postgresql-{{ postgres_release }}
+    enabled: true
+    state: stopped
+  register: restart_postgresql_systemd
+  ignore_errors: true
+
+
+- name: Delete Postgres Data Directories
+  become_user: postgres
+  file:
+    path: "{{ item }}"
+    state: absent
+  ignore_errors: true
+  with_items:
+    - "/var/lib/pgsql/{{ postgres_release }}/backups"
+    - "/var/lib/pgsql/{{ postgres_release }}/data"
+    - "/var/lib/pgsql/{{ postgres_release }}/initdb.log"
+    - "/var/lib/pgsql/{{ postgres_release }}"
+    - "/var/lib/pgsql/certs"
+

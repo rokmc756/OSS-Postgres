@@ -1,0 +1,101 @@
+---
+- name: Initialize Postgres Database Instance
+  become_user: postgres
+  shell: |
+    source {{ pgsql.base_dir }}/.bash_profile
+    sudo /usr/pgsql-{{ postgres_release }}/bin/postgresql-{{ postgres_release }}-setup initdb
+  register: init_postgres_instance
+  args:
+    chdir: "{{ pgsql.base_dir }}"
+    executable: /bin/bash
+  # source {{ pgsql.base_dir }}/.bash_profile
+  # /usr/pgsql-{{ postgres_release }}/bin/initdb -D /var/lib/pgsql/{{ postgres_release }}/data
+
+
+#- name: Create a Single Postgres Database Server
+#  become_user: postgres
+#  shell: |
+#    source {{ pgsql.base_dir }}/.bash_profile
+#    /usr/pgsql-{{ postgres_release }}/bin/postgres -D /var/lib/pgsql/{{ postgres_release }}/data > /var/lib/pgsql/{{ postgres_release }}/data/logfile 2>&1 &
+#  register: create_postgres_instance
+#  args:
+#    chdir: "{{ pgsql.base_dir }}"
+#    executable: /bin/bash
+
+
+- name: Enable and Restart PostgreSQL
+  systemd:
+    daemon_reexec: true
+    daemon_reload: true
+    name: postgresql-{{ postgres_release }}
+    enabled: true
+    state: restarted
+  register: restart_postgresql_systemd
+
+
+- name: Verify that the psql of Postgres is Installed Properly
+  become_user: postgres
+  shell: |
+    source {{ pgsql.base_dir }}/.bash_profile
+    /usr/pgsql-{{ postgres_release }}/bin/psql -c "select version()"
+  register: verify_postgres_install
+  args:
+    chdir: "{{ pgsql.base_dir }}"
+    executable: /bin/bash
+
+
+- name: Verify that the pg_ctl of Postgres is Installed Properly
+  become_user: postgres
+  shell: |
+    source {{ pgsql.base_dir }}/.bash_profile
+    /usr/pgsql-{{ postgres_release }}/bin/pg_ctl -V
+  register: verify_pg_ctl_install
+  args:
+    chdir: "{{ pgsql.base_dir }}"
+    executable: /bin/bash
+
+
+- name: Insert the Line of Executable Binary Path into .bashrc for Postgres
+  become_user: postgres
+  lineinfile:
+    path: "{{ item }}"
+    line: "export PATH=/usr/pgsql-{{ postgres_release }}/bin:$PATH"
+  with_items:
+    - "{{ pgsql.base_dir }}/.bash_profile"
+    - "{{ pgsql.home_dir }}/.bash_profile"
+
+
+- name: Grant User Access from Network Access for Access with Cert Authentication
+  become_user: postgres
+  vars:
+    ansible_python_interpreter: "/usr/bin/python3"
+  postgresql_pg_hba:
+    dest: /var/lib/pgsql/{{ postgres_release }}/data/pg_hba.conf
+    contype: host
+    users: all
+    source: "{{ pgsql_network_range }}"
+    databases: all
+    method: trust
+
+
+- name: Replace Database Directory
+  become_user: postgres
+  replace:
+    path: "{{ pgsql.base_dir }}/.bash_profile"
+    regexp: '^(.*)PGDATA=(.*)$'
+    replace: 'PGDATA=/var/lib/pgsql/{{ postgres_release }}/data'
+    backup: yes
+
+
+- name: Verify the Current State of Postgres
+  become_user: postgres
+  shell: |
+    source {{ pgsql.base_dir }}/.bash_profile
+    /usr/pgsql-{{ postgres_release }}/bin/psql -c "\l"
+  register: verify_postgres_state
+  args:
+    chdir: "{{ pgsql.base_dir }}"
+    executable: /bin/bash
+- debug: msg={{ verify_postgres_state }}
+
+

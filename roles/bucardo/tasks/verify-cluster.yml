@@ -1,0 +1,8 @@
+---
+- name: Verify Node Status
+  become_user: "{{ bucardo_postgres_admin_user }}"
+  shell: |
+    /usr/pgsql-{{ postgres_release }}/bin/bucardo -f {{ bucardo_conf_dir }}/{{ bucardo_conf_file }} node check
+  register: verify_node_status
+- debug: msg={{ verify_node_status }}
+

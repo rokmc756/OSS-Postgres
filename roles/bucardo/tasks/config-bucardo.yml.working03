@@ -1,0 +1,257 @@
+---
+- name: Install Bucardo
+  become_user: postgres
+  shell: |
+    sudo echo P | sudo /usr/local/bin/bucardo install -h {{ ansible_ssh_host }}
+  register: install_bucardo
+  ignore_errors: true
+  args:
+    executable: /bin/bash
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+  when: inventory_hostname in groups['primary']
+- debug: msg={{ install_bucardo }}
+  when: inventory_hostname in groups['primary']
+
+
+- name: Extract the Schema from the Source DB
+  become_user: postgres
+  shell: |
+    pg_dump "host={{ ansible_ssh_host }} port=5432 dbname={{ item }} user=bucardo" --schema-only |
+    grep -v 'CREATE TRIGGER' | grep -v '^--' | grep -v '^$' | grep -v '^SET' | grep -v 'OWNER TO' > {{ item }}-schema.sql
+  register: extract_schema
+  args:
+    executable: /bin/bash
+    chdir: /home/postgres
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+  with_items:
+    - testdb01
+    - testdb02
+  when: inventory_hostname in groups['primary']
+- debug: msg={{ extract_schema }}
+  when: inventory_hostname in groups['primary']
+
+
+- name: Have pgbench install its sample data in each database
+  become_user: postgres
+  shell: |
+    /usr/pgsql-{{ postgres_release }}/bin/pgbench -i {{ item }}
+  register: pgbench_install
+  ignore_errors: true
+  args:
+    executable: /bin/bash
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+  with_items:
+    - testdb01
+    - testdb02
+  when: inventory_hostname in groups['primary']
+- debug: msg={{ pgbench_install }}
+  when: inventory_hostname in groups['primary']
+
+
+# bucardo add db {{ db_server_name }} dbhost={{ ansible_ssh_host }} dbport=5432 dbname=testdb dbuser=bucardo dbpass=changeme
+- name: Add the Source DB to configure Bucardo
+  become_user: postgres
+  shell: |
+    bucardo add db {{ item }} dbhost={{ ansible_ssh_host }} dbport=5432 dbname={{ item }} dbuser=bucardo dbpass=changeme
+  register: add_source_db
+  args:
+    executable: /bin/bash
+    chdir: /home/postgres
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+  with_items:
+    - testdb01
+    - testdb02
+  when: inventory_hostname in groups['primary']
+- debug: msg={{ add_source_db }}
+  when: inventory_hostname in groups['primary']
+
+
+- name: Load the Schema with the database created
+  become_user: postgres
+  shell: |
+    psql "host={{ ansible_ssh_host }} port=5432 dbname={{ item }} user=bucardo" -f {{ item }}-schema.sql
+  register: load_schema
+  delegate_to: "{{ hostvars[groups['primary'][0]]['ansible_hostname'] }}"
+  args:
+    executable: /bin/bash
+    chdir: /home/postgres
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+  with_items:
+    - testdb01
+    - testdb02
+  when: inventory_hostname in groups['secondary']
+- debug: msg={{ load_schema }}
+  when: inventory_hostname in groups['secondary']
+
+
+- name: Load the Schema with the Database Created
+  become_user: postgres
+  shell: |
+    pg_dump "host={{ ansible_ssh_host }} port=5432 dbname={{ item }} user=bucardo" --schema-only | grep -v 'CREATE TRIGGER' \
+    | grep -v '^--' | grep -v '^$' | grep -v '^SET' | grep -v 'OWNER TO' > {{ item }}-schema-dest.sql
+  register: load_schema
+  delegate_to: "{{ hostvars[groups['primary'][0]]['ansible_hostname'] }}"
+  args:
+    executable: /bin/bash
+    chdir: /home/postgres
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+  with_items:
+    - testdb01
+    - testdb02
+  when: inventory_hostname in groups['secondary']
+- debug: msg={{ load_schema }}
+  when: inventory_hostname in groups['secondary']
+
+
+- name:  Add Destination DB
+  become_user: postgres
+  shell: |
+    bucardo add db {{ item }} dbhost={{ ansible_ssh_host }} dbport=5432 dbname={{ item }} dbuser=bucardo dbpass=changeme
+  register: add_destination_db
+  delegate_to: "{{ hostvars[groups['primary'][0]]['ansible_hostname'] }}"
+  args:
+    executable: /bin/bash
+    chdir: /home/postgres
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+  with_items:
+    - testdb01
+    - testdb02
+  when: inventory_hostname in groups['secondary']
+- debug: msg={{ add_destination_db }}
+  when: inventory_hostname in groups['secondary']
+
+
+# bucardo add all tables –her={{ her_name }} db={{ db_server_name }}
+- name: Add Tables
+  become_user: postgres
+  shell: |
+    bucardo add all tables db={{ item }} -T pgbench_history --relgroup=pgbench --verbose
+  register: add_tables
+  delegate_to: "{{ hostvars[groups['primary'][0]]['ansible_hostname'] }}"
+  args:
+    executable: /bin/bash
+    chdir: /home/postgres
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+  with_items:
+    - testdb01
+    - testdb02
+  when: inventory_hostname in groups['all']
+- debug: msg={{ add_tables }}
+  when: inventory_hostname in groups['all']
+
+
+# bucardo add sync {{ her_name }} relgroup={{ relgroup }} db={{ db_list }}
+- name: Add Syncs
+  become_user: postgres
+  shell: |
+    bucardo add sync benchdelta relgroup=pgbench dbs=testdb01,testdb02
+  register: add_syncs
+  args:
+    executable: /bin/bash
+    chdir: /home/postgres
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+  when: inventory_hostname in groups['primary']
+- debug: msg={{ add_syncs }}
+  when: inventory_hostname in groups['primary']
+
+
+- name: List DBs
+  become_user: postgres
+  shell: |
+    bucardo list dbs
+  register: list_dbs
+  args:
+    executable: /bin/bash
+    chdir: /home/postgres
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+  when: inventory_hostname in groups['primary']
+- debug: msg={{ list_dbs }}}
+  when: inventory_hostname in groups['primary']
+
+
+- name: List DB Groups
+  become_user: postgres
+  shell: |
+    bucardo list dbgroups
+  register: list_dbgroups
+  args:
+    executable: /bin/bash
+    chdir: /home/postgres
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+  when: inventory_hostname in groups['primary']
+- debug: msg={{ list_dbgroups }}}
+  when: inventory_hostname in groups['primary']
+
+
+- name: List Relgroups
+  become_user: postgres
+  shell: |
+    bucardo list relgroups
+  register: list_relgroups
+  args:
+    executable: /bin/bash
+    chdir: /home/postgres
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+  when: inventory_hostname in groups['primary']
+- debug: msg={{ list_relgroups }}}
+  when: inventory_hostname in groups['primary']
+
+
+- name: List Sync
+  become_user: postgres
+  shell: |
+    bucardo list sync
+  register: list_sync
+  args:
+    executable: /bin/bash
+    chdir: /home/postgres
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+  when: inventory_hostname in groups['primary']
+- debug: msg={{ list_sync }}}
+  when: inventory_hostname in groups['primary']
+
+
+# bucardo start sync
+- name: Start Bucardo
+  become_user: postgres
+  shell: |
+    bucardo start
+  register: start_bucardo
+  args:
+    executable: /bin/bash
+    chdir: /home/postgres
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+  when: inventory_hostname in groups['primary']
+- debug: msg={{ start_bucardo }}
+  when: inventory_hostname in groups['primary']
+
+
+- name: Status Bucardo
+  become_user: postgres
+  shell: |
+    bucardo status
+  register: status_bucardo
+  args:
+    executable: /bin/bash
+    chdir: /home/postgres
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+  when: inventory_hostname in groups['primary']
+- debug: msg={{ status_bucardo }}
+  when: inventory_hostname in groups['primary']
+
+

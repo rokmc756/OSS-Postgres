@@ -1,0 +1,25 @@
+---
+- name: Install EPEL Package Repository
+  package:
+    name: epel-release
+    state: present
+  register: install_epel_pkg_repo
+- debug: msg={{ install_epel_pkg_repo }}
+  when: print_debug == true
+
+
+- name: Ensure PostgreSQL Repository
+  yum_repository:
+    name: "{{ postgres_repo_name }}"
+    description: PostgreSQL repository
+    baseurl: "{{ postgres_repo }}"
+    state: present
+
+
+- name: Update Caches for DNF Packages
+  shell: |
+    dnf makecache -y
+  register: update_dnf_cache
+- debug: msg={{ update_dnf_cache }}
+  when: print_debug == true
+

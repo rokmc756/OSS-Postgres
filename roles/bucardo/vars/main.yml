@@ -1,0 +1,48 @@
+---
+_ssl:
+  ssl_dir: "{{ pgsql.base_dir }}/certs"
+  ssl_days: 3660
+  ssl_country: "KR"
+  ssl_state: "Seoul"
+  ssl_location: "Guro"
+  ssl_organization: "VMware"
+  ssl_organization_unit: "Tanzu"
+  ssl_common_name: "jtest.pivotal.io"
+  ssl_email: "jomoon@pivotal.io"
+  enable: true
+
+
+_bucardo:
+  base_path: "/root"
+  major_version: "5"
+  minor_version: "6"
+  patch_version: "0"
+  build_version: ""
+  os_version: el9
+  arch_type: x86_64
+  bin_type: tar.gz
+  db_name: bucardo
+  db_user: bucardo
+  db_password: 'changeme'
+  user: postgres
+  group: postgres
+  domain: "jtest.pivotal.io"
+  download: false
+  repo_url: ""
+  download_url: ""
+
+
+_dbix_safe:
+  base_path: "/root"
+  major_version: "1"
+  minor_version: "2"
+  patch_version: "5"
+  build_version: ""
+  os_version: el9
+  arch_type: x86_64
+  bin_type: tar.gz
+  domain: "jtest.pivotal.io"
+  download: false
+  repo_url: ""
+  download_url: ""
+

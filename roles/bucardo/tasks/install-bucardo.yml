@@ -1,0 +1,99 @@
+---
+- name: Check if Bucardo Tarball File Already Exists
+  stat: path={{ _bucardo.base_path }}/Bucardo-{{ bucardo_version }}.{{ _bucardo.bin_type }}
+  register: bucardo_tarball_exists
+- debug: msg={{ bucardo_tarball_exists }}
+
+
+- name: Check if Bucardo Installation Directory Already Exists
+  stat: path={{ _bucardo.base_path }}/Bucardo-{{ bucardo_version }}
+  register: bucardo_install_dir_exists
+
+
+- name: Sanity Check for Existence of "{{ _bucardo.base_path }}/Bucardo-{{ bucardo_version }}.{{ _bucardo.bin_type }}" File or "{{ _bucardo.base_path }}/Bucardo-{{ bucardo_version }}" Directory
+  debug: msg="Both {{ _bucardo.base_path }}/Bucardo-{{ bucardo_version }}.{{ _bucardo.bin_type }} File and {{ _bucardo.base_path }}/Bucardo-{{ bucardo_version }} Directory already Exists"
+  changed_when: bucardo_tarball_exists.stat.exists == True and bucardo_install_dir_exists.stat.exists == True
+
+
+- name: Copy Bucardo Tarball from Local Directory, roles/bucardo/files
+  copy: src=Bucardo-{{ bucardo_version }}.{{ _bucardo.bin_type }} dest={{ _bucardo.base_path }}/Bucardo-{{ bucardo_version }}.{{ _bucardo.bin_type }} mode=0644 owner=root group=root
+  register: local_copy_buckardo
+  when: _bucardo.download == false and bucardo_tarball_exists.stat.exists != True
+
+
+- name: Download Bucardo Tarball File
+  shell: |
+    wget -P {{ _bucardo.base_path }} --show-progress --auth-no-challenge https://bucardo.org/downloads/Bucardo-{{ bucardo_version }}.{{ _bucardo.bin_type }}
+  register: download_bucardo_tarball
+  when: _bucardo.download == true and bucardo_tarball_exists.stat.exists == false
+
+
+# https://xxxxxxxxxxxxxxxx:@get.weka.io/dist/v1/pkg/{{ weka_file_name }}.tar
+#- name: Download weka tarball file
+#  get_url:
+#    url: "{{ server_url }}"
+#    dest: "{{ _weka.base_path }}/{{ weka_file_name }}.tar"
+#    owner: root
+#    group: root
+#    mode: 0755
+#  when: _weka.download == true and weka_tarball_exists.stat.exists == false
+
+
+- name: Unarchive Bucardo Tarball
+  unarchive:
+    src: "{{ _bucardo.base_path }}/Bucardo-{{ bucardo_version }}.{{ _bucardo.bin_type }}"
+    dest: "{{ _bucardo.base_path }}"
+    owner: "root"
+    group: "root"
+    mode: "0755"
+    remote_src: yes
+  register: unarchive_bucardo_tarball
+  when: bucardo_install_dir_exists.stat.exists == false
+
+
+- name: Install Bucardo Makefile
+  shell: |
+    perl Makefile.PL
+  register: install_bucardo_makefile
+  args:
+    executable: /bin/bash
+    chdir: "{{ _bucardo.base_path }}/Bucardo-{{ bucardo_version }}"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+
+
+- name: Install Bucardo Binary
+  shell: |
+    make install
+  register: install_bucardo_bin
+  args:
+    executable: /bin/bash
+    chdir: "{{ _bucardo.base_path }}/Bucardo-{{ bucardo_version }}"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+
+
+- name: Check Bucardo Version
+  shell: |
+    bucardo --version
+  register: check_bucardo_version
+  args:
+    executable: /bin/bash
+    chdir: "{{ _bucardo.base_path }}/Bucardo-{{ bucardo_version }}"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+- debug: msg={{ check_bucardo_version }}
+
+
+- name: Create Bucardo New Data and Log
+  file:
+    path: "{{ item }}"
+    owner: "postgres"
+    group: "postgres"
+    state: directory
+    mode: 0755
+  register: create_bucardo_data_log
+  with_items:
+    - "/var/run/bucardo"
+    - "/var/log/bucardo"
+
