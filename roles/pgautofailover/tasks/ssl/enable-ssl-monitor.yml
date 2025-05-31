@@ -1,0 +1,16 @@
+---
+- name: Enable SSL on Monitor
+  become_user: postgres
+  shell: |
+    source /var/lib/pgsql/.bash_profile
+    {{ common.pgsql_bin_dir }}/pg_autoctl enable ssl --pgdata {{ pgsql.base_dir }}/monitor --ssl-ca-file '' --ssl-crl-file '' \
+    --server-key {{ _ssl.ssl_dir }}/server.key --server-cert {{ _ssl.ssl_dir }}/server.crt --ssl-mode prefer
+  register: enable_ssl_monitor
+
+
+- name: Restart PGAutoFailover Service to Apply SSL Changes
+  become_user: postgres
+  shell: |
+    sudo systemctl restart pgautofailover
+  register: restart_pgautofailover
+

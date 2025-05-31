@@ -1,0 +1,73 @@
+---
+#
+#- hosts: monitors
+#  become: yes
+#  vars:
+#    print_debug: true
+#    install_pkgs: true
+#    install_dep_pkgs: false
+#    uninstall_dep_pkgs: false
+#    uninstall_pkgs: false
+#    install_pgwatch2: true
+#    uninstall_pgwatch2: true
+#  roles:
+#    - pgwatch2
+#    - single
+
+#
+#- hosts: all
+#  become: yes
+#  vars:
+#    print_debug: true
+#    install_pkgs: false
+#    uninstall_pkgs: true
+#    install_go: false
+#    install_prometheus: false
+#    install_grafana: false
+#    uninstall_grafana: false
+#    uninstall_prometheus: true
+#    uninstall_go: false
+#  roles:
+#    - grafana
+
+#
+- hosts: all
+  become: yes
+  vars:
+    print_debug: true
+    install_pkgs: true
+    install_dep_pkgs: false
+    uninstall_dep_pkgs: true
+    uninstall_pkgs: true
+  roles:
+    - single
+#    - init-hosts
+
+#
+#- hosts: workers
+#  become: yes
+#  vars:
+#    print_debug: true
+#    install_pkgs: true
+#    install_dep_pkgs: false
+#    uninstall_dep_pkgs: false
+#    uninstall_pkgs: false
+#  roles:
+#    - single
+#    - grafana
+#
+
+#
+#- hosts: monitors
+#  become: yes
+#  vars:
+#    print_debug: true
+#    install_pkgs: true
+#    uninstall_pkgs: true
+#    install_go: true
+#    install_grafana: true
+#    install_prometheus: true
+#  rolse
+#    - grafana
+##    - init-hosts
+#

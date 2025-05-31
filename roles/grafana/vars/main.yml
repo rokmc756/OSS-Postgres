@@ -1,0 +1,43 @@
+---
+# go1.23.5.linux-amd64.tar.gz                  -  https://go.dev/dl/
+_go:
+  major_version: 1
+  minor_version: 23
+  patch_version: 5
+
+
+# prometheus-3.1.0.linux-amd64.tar.gz          -  https://prometheus.io/download/
+_prometheus:
+  major_version: 3
+  minor_version: 1
+  patch_version: 0
+
+
+# postgres_exporter-0.16.0.linux-amd64.tar.gz  -  https://github.com/prometheus-community/postgres_exporter/releases
+_postgres_exporter:
+  major_version: 0
+  minor_version: 16
+  patch_version: 0
+
+
+# pgwatch2_1.14.0_linux_x86_64.rpm             -  https://github.com/cybertec-postgresql/pgwatch2/releases
+_pgwatch2:
+  major_version: 1
+  minor_version: 14
+  patch_version: 0
+  arch: x86_64
+  # arch: 64-bit
+
+
+_ssl:
+  ssl_dir: "/etc/grafana"
+  ssl_days: 3660
+  ssl_country: "KR"
+  ssl_state: "Seoul"
+  ssl_location: "Guro"
+  ssl_organization: "VMware"
+  ssl_organization_unit: "Tanzu"
+  ssl_common_name: "jtest.pivotal.io"
+  ssl_email: "jomoon@pivotal.io"
+  enable: true
+

@@ -1,0 +1,27 @@
+---
+- name: Stop Systemd Service of Workers Instance
+  systemd:
+    name: pgautofailover
+    state: stopped
+    daemon_reload: yes
+  register: stop_pgautofailover_service
+  ignore_errors: true
+
+
+- name: Alternative Python Version
+  shell: |
+    /usr/sbin/update-alternatives --install /usr/bin/python python {{ yum_python_version }} 1
+    /usr/sbin/alternatives --set python {{ yum_python_version }}
+  register: alternatives_python
+  ignore_errors: true
+  when: ansible_distribution == 'RedHat' or ansible_distribution == 'CentOS' or ansible_distribution == 'Rocky'
+
+
+- name: Reload Systemd Daemon
+  systemd:
+    daemon_reload: yes
+  register: reload_sysemd_daemon
+  ignore_errors: true
+  async: 60
+  poll: 5
+

@@ -1,0 +1,82 @@
+---
+ansible_ssh_pass: "changeme"
+ansible_become_pass: "changeme"
+
+
+pgsql:
+  cluster_name: jack-kr-pgsql
+  major_version: "15"
+  minor_version: "5"
+  patch_version: "1"
+  build_version: "1"
+  os_version: el9
+  arch_type: x86_64
+  bin_type: rpm
+  db_name: pgsql_testdb
+  db_user: jomoon
+  user: postgres
+  group: postgres
+  db_password: 'changeme'
+  sudo_user_dir: "/home/jomoon"
+  home_dir: "/home/postgres"
+  base_dir: "/var/lib/pgsql"
+  domain: "jtest.pivotal.io"
+  repo_url: ""
+  download_url: ""
+  download: false
+  host_num: "{{ groups['all'] | length }}"
+  base_path: /root
+  enable_ssl: true
+  # with_patroni_pkg: True
+  net:
+    type: "virtual"                # Or Physical
+    gateway: "192.168.0.1"
+    ipaddr0: "192.168.0.19"
+    ipaddr1: "192.168.1.19"
+    ipaddr2: "192.168.2.19"
+  client:
+    net:
+      type: "virtual"              # Or Physical
+      cores: 1
+      ipaddr0: "192.168.0.19"
+      ipaddr1: "192.168.1.19"
+      ipaddr2: "192.168.2.19"
+  vms:
+    rk9: [ "rk9-freeipa", "rk9-node01", "rk9-node02", "rk9-node03", "rk9-node04", "rk9-node05" ]
+    ubt24: [ "rk9-freeipa", "ubt24-node01", "ubt24-node02", "ubt24-node03", "ubt24-node04", "ubt24-node05" ]
+  debug_opt: ""  # --debug
+
+
+common:
+  sudo_user: jomoon
+  sudo_group: jomoon
+  sudo_user_home_dir: "/home/jomoon"
+  pgsql_pkg_name: "vmware-postgres{{ pgsql.major_version }}"
+  pgsql_bin_dir: "/opt/vmware/postgres/{{ pgsql.major_version }}/bin"
+  # pgsql_pkg_name: pivotal-postgres
+
+
+jdk:
+  oss:
+    install: true
+    jvm_home: "/usr/lib/jvm"
+    major_version: "1"
+    minor_version: "8"
+    patch_version: "0"
+    # 1.8.0
+    # 11.0.4
+    # 17.0.2
+  oracle:
+    install: false
+    jvm_home: "/usr/lib/jvm"
+    major_version: "13"
+    minor_version: "0"
+    patch_version: "2"
+    download: false
+
+
+vmware:
+  esxi_hostname: "192.168.0.231"
+  esxi_username: "root"
+  esxi_password: "Changeme34#$"
+

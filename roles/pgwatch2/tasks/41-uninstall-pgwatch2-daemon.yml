@@ -1,0 +1,22 @@
+---
+- name: Stop and Disable PGWatch2 Daemon Service
+  systemd:
+    daemon_reexec: true
+    daemon_reload: true
+    name: "{{ item }}"
+    enabled: false
+    state: stopped
+  register: stop_pgwatch2_daemon_service
+  ignore_errors: true
+  with_items:
+    - pgwatch2-daemon
+
+
+- name: Delete the PGWatch2 Daemon Systemd Unit File
+  file: path={{ item.dest }} state=absent
+  register: delete_systemd_unit_files
+  ignore_errors: true
+  with_items:
+    - { src: 'pgwatch2-daemon.systemd.j2', dest: '/etc/systemd/system/pgwatch2-daemon.service', owner: 'root', group: 'root' }
+    - { src: 'instances.yaml.j2', dest: '/etc/pgwatch2/config/instances.yaml', owner: 'root', group: 'root' }
+

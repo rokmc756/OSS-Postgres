@@ -1,0 +1,25 @@
+---
+- name: Drop Databases
+  become_user: postgres
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+  postgresql_db: name={{ item }} template='template0' state=absent login_host=localhost login_user=postgres login_unix_socket=/tmp
+  register: drop_pgwatch2_database
+  ignore_errors: true
+  with_items:
+    - "pgwatch2"
+    - "pgwatch2_metrics"
+    - "pgwatch2_grafana"
+
+
+- name: Delete Users to the PGWatch2 Schema
+  become_user: postgres
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+  postgresql_user: name={{ item.name }} password={{ item.pass }} state=absent login_host=localhost login_user=postgres login_unix_socket=/tmp
+  ignore_errors: true
+  register: delete_pgwatch2_users
+  with_items:
+    - { db: 'pgwatch2', name: 'pgwatch2', pass: 'changeme' }
+    - { db: 'pgwatch2_grafana', name: 'pgwatch2_grafana', pass: 'changeme' }
+

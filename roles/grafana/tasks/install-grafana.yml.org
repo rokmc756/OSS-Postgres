@@ -1,0 +1,135 @@
+---
+# Install grafana for RHEL or CentOS
+#
+#
+- name: Copy influxdb yum repo file
+  become: true
+  template: src={{ item.src }} dest={{ item.dest }} owner=root group=root mode=644 force=yes
+  register: config_file_copied
+  with_items:
+    - { src: "influxdata.repo.j2",   dest: "/etc/yum.repos.d/influxdata.repo" }
+
+#
+- name: Install Dependent and Grafana RPM packages
+  become: true
+  yum:
+    name: "{{ item }}"
+    state: present
+    # skip_broken: yes
+  async: 120
+  poll: 5
+  with_items:
+    - epel-release
+    - python3
+    - python3-pip
+    - postgresql-contrib
+    - postgresql-devel
+    - influxdb2
+    - grafana
+    - grafana-pcp
+  when: install_pkgs
+
+#
+- name: Install pip modules for grafana
+  become: true
+  become_user: root
+  shell: |
+    pip3 install setuptools_rust
+    python3 -m pip install --upgrade pip
+    pip3 install --upgrade setuptools_rust
+    python3 -m pip install --upgrade Pillow
+    pip3 install wheel
+  async: 120
+  poll: 5
+  register: pip_module_installed
+
+#
+- name: Check the prometheus and postgres exporter tar files are already existed
+  become: true
+  stat: path=/root/{{ item }}
+  register: tar_files_existed
+  with_items:
+    - prometheus-{{ prometheus_major_version }}.{{ prometheus_minor_version }}.{{ prometheus_patch_version }}.linux-amd64.tar.gz
+    - postgres_exporter-{{ postgres_exporter_major_version }}.{{ postgres_exporter_minor_version }}.{{ postgres_exporter_patch_version }}.linux-amd64.tar.gz
+
+- debug: msg={{ tar_files_existed }}
+
+#
+- name: Check the prometheus and postgres exporter binary files
+  become: true
+  stat: path=/usr/local/bin/{{ item }}
+  register: bin_files_existed
+  with_items:
+    - prometheus
+    - postgres_exporter
+
+- debug: msg={{ bin_files_existed }}
+
+#
+- name: Copy the prometheus and postgres exporter tar files
+  become: true
+  copy: src={{ item }} dest=/root/{{ item }} mode=0644 owner=root group=root
+  register: tar_files_copied
+  with_items:
+    - prometheus-{{ prometheus_major_version }}.{{ prometheus_minor_version }}.{{ prometheus_patch_version }}.linux-amd64.tar.gz
+    - postgres_exporter-{{ postgres_exporter_major_version }}.{{ postgres_exporter_minor_version }}.{{ postgres_exporter_patch_version }}.linux-amd64.tar.gz
+  when: not ( tar_files_existed.results | map( attribute='stat.exists') ) is all
+  # when: tar_files_existed.stat.exists != True
+
+
+#
+- name: Untar the prometheus and postgres exporter tar files
+  become: true
+  shell: tar -C /root -xf /root/{{ item }}
+  args:
+    executable: /bin/bash
+  with_items:
+    - prometheus-{{ prometheus_major_version }}.{{ prometheus_minor_version }}.{{ prometheus_patch_version }}.linux-amd64.tar.gz
+    - postgres_exporter-{{ postgres_exporter_major_version }}.{{ postgres_exporter_minor_version }}.{{ postgres_exporter_patch_version }}.linux-amd64.tar.gz
+  when: not ( bin_files_existed.results | map( attribute='stat.exists') ) is all
+  # when: bin_files_existed.stat.exists != True
+
+#
+- name: Copy binary of the prometheus and postgres exporter into /usr/local/bin directory
+  become: true
+  shell: cp -f /root/{{ item.src }} /usr/local/bin/{{ item.dest }}
+  args:
+    executable: /bin/bash
+  with_items:
+    - { src: "prometheus-{{ prometheus_major_version }}.{{ prometheus_minor_version }}.{{ prometheus_patch_version }}.linux-amd64/prometheus",                                     dest: "prometheus" }
+    - { src: "postgres_exporter-{{ postgres_exporter_major_version }}.{{ postgres_exporter_minor_version }}.{{ postgres_exporter_patch_version }}.linux-amd64/postgres_exporter",  dest: "postgres_exporter" }
+  when: not ( bin_files_existed.results | map( attribute='stat.exists') ) is all
+
+  # when: bin_files_existed.stat.exists != True
+
+
+#
+- name: Copy the grafana / prometheus / postgres_exporter systemd file
+  become: true
+  template: src={{ item.src }} dest={{ item.dest }} owner=root group=root mode=644 force=yes
+  register: systemd_file_copied
+  with_items:
+    - { src: "grafana.ini.j2",                   dest: "/etc/grafana/grafana.ini" }
+    - { src: "prometheus.yml.j2",                dest: "/usr/local/etc/prometheus.yml" }
+    - { src: "postgres_exporter.systemd.j2",   dest: "/etc/systemd/system/postgres_exporter.service" }
+    - { src: "prometheus.systemd.j2",            dest: "/etc/systemd/system/prometheus.service" }
+  when: not ( bin_files_existed.results | map( attribute='stat.exists') ) is all
+  # when: bin_files_existed.stat.exists != True
+
+  # copy: src={{ item }} dest=/root/{{ item }} mode=0644 owner=root group=root
+
+#
+- name: Reload and start services for grafana
+  become: true
+  systemd:
+    daemon_reexec: true
+    daemon_reload: true
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  register: systemd_restarted
+  with_items:
+    - influxdb
+    - grafana-server
+    - postgres_exporter
+    - prometheus

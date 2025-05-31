@@ -1,0 +1,285 @@
+---
+- name: Copy the VMwawre Postgres RPM File to All Hosts
+  become: true
+  become_user: root
+  copy: src={{ package_name }}-{{ major_version }}.{{ minor_version }}-{{ patch_version }}.{{ rhel_version }}.x86_64.rpm dest=/home/jomoon/{{ package_name }}-{{ major_version }}.{{ minor_version }}-{{ patch_version }}.{{ rhel_version }}.x86_64.rpm mode=0644 owner=jomoon group=jomoon
+  when: inventory_hostname in groups['repository']
+
+
+- name: Install VMware Postgres
+  become: true
+  become_user: root
+  yum:
+    name: /home/jomoon/{{ package_name }}-{{ major_version }}.{{ minor_version }}-{{ patch_version }}.{{ rhel_version }}.x86_64.rpm
+    state: present
+  async: 120
+  poll: 5
+  when: inventory_hostname in groups['repository']
+
+
+- name: Edit patroni.yml for PGBackRest
+  become: true
+  become_user: root
+  lineinfile:
+    dest: /var/lib/pgsql/patroni.yml
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: "{{ item.state }}"
+  with_items:
+    - { regexp: "^  listen: '{{ hostvars[inventory_hostname]['ansible_eth0']['ipv4']['address'] }}:5432'", line: "  listen: '0.0.0.0:5532'", state: present }
+    - { regexp: "^  connect_address: '{{ hostvars[inventory_hostname]['ansible_eth0']['ipv4']['address'] }}:5432'", line: "  connect_address: '{{ hostvars[inventory_hostname]['ansible_eth0']['ipv4']['address'] }}:5532'", state: present }
+    - { regexp: "^    port: 5432", line: "    port: 5532", state: present }
+  when: inventory_hostname in groups['postgres-ha']
+
+
+- name: Edit patroni.yml for pgBackrest
+  become: true
+  become_user: root
+  lineinfile:
+    path: /var/lib/pgsql/patroni.yml
+    insertafter: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    firstmatch: yes
+    state: "{{ item.state }}"
+  with_items:
+    - { regexp: '^  parameters:', line: '    archive_mode: "on"', state: present }
+    - { regexp: '^    archive_mode:*', line: '    archive_command: "pgbackrest --stanze=main archive-push %p"', state: present }
+  when: inventory_hostname in groups['postgres-ha']
+
+
+#- name: Replace String for Traditional Archive and Restore Command
+#  become: true
+#  become_user: root
+#  replace:
+#    path: /var/lib/pgsql/patroni.yml
+#    regexp: '{{ item.regexp }}'
+#    replace: "{{ item.replace }}"
+#  with_items:
+#    - { regexp: '^        archive_command:', replace: '#        archive_command:' }
+#    - { regexp: '^        restore_command:', replace: '#        restore_command:' }
+#  when: inventory_hostname in groups['postgres-ha']
+
+
+# Commented due to Taking Too Much Time
+#- name: Install rpm packages of pgBackrest dependencies
+#  become: true
+#  become_user: root
+#  yum:
+#    name: "{{ item }}"
+#    state: present
+#  ignore_errors: yes
+#  register: pgbackrest_dependancies_installed
+#  with_items:
+#    - perl
+#    - perl-Time-HiRes
+#    - perl-Digest-SHA
+#    - perl-JSON-PP
+
+
+- name: Create Directories and Files in All Nodes
+  become: true
+  become_user: root
+  file:
+    path: "{{ item.path }}"
+    state: "{{ item.state }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+    mode: "{{ item.mode }}"
+  with_items:
+    - { path: '/etc/pgbackrest', state: 'directory', owner: 'root', group: 'root', mode: '755' }
+    - { path: '/etc/pgbackrest/conf.d', state: 'directory', owner: 'root', group: 'root', mode: '755' }
+    - { path: '/var/log/pgbackrest', state: 'directory', owner: 'postgres', group: 'postgres', mode: '770' }
+    - { path: '/etc/pgbackrest/pgbackrest.conf', state: 'touch', owner: 'postgres', group: 'postgres', mode: '640' }
+    - { path: '/var/lib/pgsql/.ssh', state: 'directory', owner: 'postgres', group: 'postgres', mode: '700' }
+    - { path: '/var/lib/pgsql/.ssh/authorized_keys', state: 'touch', owner: 'postgres', group: 'postgres', mode: '640' }
+
+
+- name: Allow SSH Connection for Postgres User in SELinux Policy
+  become: true
+  become_user: root
+  command: restorecon -FRvv /var/lib/pgsql/.ssh/
+
+
+- name: Exchange SSH Keys to Allow Password-Less Login between All Hosts
+  become: true
+  become_user: postgres
+  shell: |
+    ssh-keygen -f /var/lib/pgsql/.ssh/id_rsa -t rsa -b 4096 -N "" <<EOF
+    y
+    EOF
+
+
+- name: Fetch the Keyfile from the Node to Master
+  become: true
+  become_user: postgres
+  fetch:
+    src: "/var/lib/pgsql/.ssh/id_rsa.pub"
+    dest: "/tmp/{{ansible_hostname}}-id_rsa.pub"
+    flat: yes
+
+
+- name: Copy the Key Add to Authorized Keys Using Ansible Module
+  become: true
+  become_user: postgres
+  authorized_key:
+    user: postgres
+    state: present
+    key: "{{ lookup('file','/tmp/{{item}}-id_rsa.pub')}}"
+  when: "{{ item != ansible_hostname }}"
+  with_items: 
+    - "{{ groups['all'] }}"
+
+
+#- name: SSH Keyscan for known_hosts File
+#  become: true
+#  become_user: postgres
+#  command: ssh-keyscan -H {{ inventory_hostname }} >> ~/.ssh/known_hosts
+#  register: keyscan
+#  delegate_to: co7-master
+#  when: inventory_hostname in groups['postgres-ha']
+
+
+#- name: SSH Keyscan for Known_hosts File
+#  become: true
+#  become_user: postgres
+#  command: ssh-keyscan -H co7-master >> ~/.ssh/known_hosts
+#  register: keyscan
+#  when: inventory_hostname in groups['postgres-ha']
+
+
+- name: The SSH Keyscan for known_hosts File
+  become: true
+  become_user: postgres
+  command: /usr/bin/ssh-keyscan -t ecdsa {{ inventory_hostname }}
+  register: keyscan_repo
+  delegate_to: co7-master
+  when: inventory_hostname in groups['postgres-ha']
+
+
+- name: The SSH keyscan for known_hosts File
+  become: true
+  become_user: postgres
+  command: /usr/bin/ssh-keyscan -t ecdsa co7-master
+  register: keyscan_nodes
+  when: inventory_hostname in groups['postgres-ha']
+
+
+- name: Input Key
+  become: true
+  become_user: postgres
+  lineinfile:
+    path: /var/lib/pgsql/.ssh/known_hosts
+    line: "{{ item }}"
+    create: yes
+  delegate_to: co7-master
+  with_items:
+    - "{{ keyscan_repo.stdout_lines }}"
+  when: inventory_hostname in groups['postgres-ha']
+
+
+- name: Input Key
+  become: true
+  become_user: postgres
+  lineinfile:
+    path: /var/lib/pgsql/.ssh/known_hosts
+    line: "{{ item }}"
+    create: yes
+  with_items:
+    - "{{ keyscan_nodes.stdout_lines }}"
+  when: inventory_hostname in groups['postgres-ha']
+
+
+- name: Create Repository Location
+  become: true
+  become_user: root
+  file:
+    path: "{{ item.path }}"
+    state: "{{ item.state }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+    mode: "{{ item.mode }}"
+  with_items:
+    - { path: '/var/lib/pgbackrest', state: 'directory', owner: 'postgres', group: 'postgres', mode: '750' }
+  when: inventory_hostname in groups['repository']
+
+
+- name: Configure pgbackrest.conf for Patroni Nodes
+  become: true
+  become_user: root
+  template: src=pgbackrest.conf.ha.j2 dest=/etc/pgbackrest/pgbackrest.conf owner=postgres group=postgres mode=640 force=yes
+  register: patroni_prereq_installed
+  when: inventory_hostname in groups['postgres-ha']
+
+
+- name: Configure pgbackrest.conf for Repository Node
+  become: true
+  become_user: root
+  template: src=pgbackrest.conf.repo.j2 dest=/etc/pgbackrest/pgbackrest.conf owner=postgres group=postgres mode=640 force=yes
+  register: patroni_prereq_installed
+  when: inventory_hostname in groups['repository']
+
+
+- name: Reload and Start Patroni Systemd Service
+  become: true
+  become_user: root
+  systemd:
+    name: patroni
+    daemon_reload: yes
+    state: restarted
+  when: inventory_hostname in groups["postgres-ha"]
+
+
+- name: Pause for 1 Minutes to Wait for Compleiting the Initializaion of Patroni Cluster
+  pause:
+    minutes: 1
+  when: inventory_hostname in groups["postgres-ha"]
+
+
+- name: Check the Config on Each of the Two Postgres hosts
+  become: true
+  become_user: postgres
+  shell: ( {{ patronictl_path }} -c /var/lib/pgsql/patroni.yml list )
+  register: patroni_listed
+  when: inventory_hostname in groups["postgres-ha"]
+- debug: msg={{ patroni_listed }}
+
+
+- meta: end_play
+
+
+- name: Check the Config on All Postgres Hosts. the Difference in Output. The WAL Log will Only be Archived from the Primary
+  become: true
+  become_user: postgres
+  command: /usr/bin/pgbackrest --stanza=main --log-level-console=info check
+  register: stanza_checked
+  when: inventory_hostname in groups['repository']
+- debug: msg={{ stanza_checked }}
+
+
+- name: Create the Stanza on the Repository Host ( Only Needs to be Done on This Host )
+  become: true
+  become_user: postgres
+  command: /usr/bin/pgbackrest --stanza=main --log-level-console=info stanza-create
+  register: stanza_created
+  when: inventory_hostname in groups['repository']
+- debug: msg={{ stanza_created }}
+
+
+- name: Check the Config on All Postgres Hosts. the Difference in Output. The WAL Log will Only be Archived from the Primary
+  become: true
+  become_user: postgres
+  command: /usr/bin/pgbackrest --stanza=main --log-level-console=info check
+  register: stanza_checked
+  when: inventory_hostname in groups['repository']
+- debug: msg={{ stanza_checked }}
+
+
+- name: Create a Backup ( Must be Run from Repository Host )
+  become: true
+  become_user: postgres
+  command: /usr/bin/pgbackrest --log-level-console=info --stanza=main backup
+  register: backup_created
+  ignore_errors: yes
+  when: inventory_hostname in groups['repository']
+- debug: msg={{ backup_created }}
+

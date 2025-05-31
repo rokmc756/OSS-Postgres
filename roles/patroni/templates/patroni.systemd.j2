@@ -1,0 +1,24 @@
+[Unit]
+Description=Runners to orchestrate a patroni cluster
+After=etcd.service syslog.target network.target
+
+[Service]
+Type=simple
+User=postgres
+Group=postgres
+Environment="PATRONI_LOGLEVEL=DEBUG"
+#ExecStartPre=-/usr/bin/sudo /sbin/modprobe softdog
+#ExecStartPre=-/usr/bin/sudo /bin/chown postgres /dev/watchdog
+#ExecStart={{ _patroni.bin_path }} {{ pgsql.base_dir }}/patroni.yml
+#ExecStart=/bin/bash {{ _patroni.bin_path }} {{ pgsql.base_dir }}/patroni.yml
+#ExecStart=/bin/bash -c '. "$0" && exec "$@"' {{ pgsql.base_dir }}/.bash_profile {{ _patroni.bin_path }} {{ pgsql.base_dir }}/patroni.yml
+ExecStart=/bin/bash -l -c 'exec "$@"' {{ pgsql.base_dir }}/.bash_profile {{ _patroni.bin_path }} {{ pgsql.base_dir }}/patroni.yml
+
+ExecReload=/bin/kill -s HUP $MAINPID
+KillMode=process
+Restart=no
+TimeoutSec=30
+
+[Install]
+WantedBy=multi-user.target
+

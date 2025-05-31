@@ -1,0 +1,22 @@
+- name: Stop and Disable Firewalld
+  service:
+    name: firewalld
+    state: stopped
+    enabled: false
+  ignore_errors: true
+
+
+- name: Flush Iptables Rules
+  shell: |
+    iptables -F
+  register: flush_iptables_rules
+  ignore_errors: true
+
+
+- name: List Iptables Rules
+  shell: |
+    iptables -nL
+  register: list_iptables_rules
+  ignore_errors: true
+- debug: msg={{ list_iptables_rules.stdout }}
+

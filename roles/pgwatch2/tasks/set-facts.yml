@@ -1,0 +1,71 @@
+---
+- name: Get Network Interface name From Prefix of IP Addresses Provided
+  set_fact:
+    netdev0: "{{ ansible_interfaces | map('regex_replace', '^', 'ansible_') | map('extract', vars) | selectattr('ipv4', 'defined') | selectattr('ipv4.address', 'match', pgsql.net.ipaddr0 ) | map(attribute='device') | first }}"
+    netdev2: "{{ ansible_interfaces | map('regex_replace', '^', 'ansible_') | map('extract', vars) | selectattr('ipv4', 'defined') | selectattr('ipv4.address', 'match', pgsql.net.ipaddr2 ) | map(attribute='device') | first }}"
+    # netdev1: "{{ ansible_interfaces | map('regex_replace', '^', 'ansible_') | map('extract', vars) | selectattr('ipv4', 'defined') | selectattr('ipv4.address', 'match', pgsql.net.ipaddr1 ) | map(attribute='device') | first }}"
+
+
+- name: Get IP Address from Provided Network Device Name
+  set_fact:
+    ipaddr0: "{{ hostvars[inventory_hostname]['ansible_'~netdev0].ipv4.address }}"
+    ipaddr2: "{{ hostvars[inventory_hostname]['ansible_'~netdev2].ipv4.address }}"
+    # ipaddr1: "{{ hostvars[inventory_hostname]['ansible_'~netdev1].ipv4.address }}"
+
+
+# https://stackoverflow.com/questions/36328907/ansible-get-all-the-ip-addresses-of-a-group
+- name: Define Facts For All GPHOST's Hostname
+  set_fact:
+    all_ext_hostnames: "{{ groups['all'] | map('extract', hostvars, ['ansible_hostname']) | join(' ') }}"
+- debug: msg={{ all_ext_hostnames }}
+
+
+- name: Define Fact For All Hosts of First IP Addresses
+  set_fact:
+    all_net0_ipaddrs: "{{ groups['all'] | map('extract', hostvars, ['ansible_'~netdev0, 'ipv4', 'address']) | join(',') }}"
+- debug: msg={{ all_net0_ipaddrs }}
+
+
+- name: Set Default Network Device and Address
+  set_fact:
+    _netdev: "{{ 'ansible_'~ netdev2 }}"
+    _ipaddr: "{{ ipaddr2 }}"
+
+
+- name: Define Facts for List of Packages to Install or Uninstall
+  set_fact:
+    rh_install_pkgs: "{{ rh_common_dep_pkgs ~ ',' ~ rh7_dep_pkgs ~ ',' ~ rh7_python_pkgs }}"
+    rh_uninstall_pkgs: "{{ remove_rh_common_dep_pkgs ~ ',' ~ rh7_dep_pkgs ~ ',' ~ rh7_python_pkgs }}"
+  when: ( ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky" ) and ansible_distribution_major_version|int <= 7
+
+
+- name: Define Facts for List of Packages to Install or Uninstall
+  set_fact:
+    rh_install_pkgs: "{{ rh_common_dep_pkgs ~ ',' ~ rh8_dep_pkgs ~ ',' ~ rh8_python_pkgs }}"
+    rh_uninstall_pkgs: "{{ remove_rh_common_dep_pkgs ~ ',' ~ rh8_dep_pkgs ~ ',' ~ rh8_python_pkgs }}"
+  when: ( ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky" ) and ansible_distribution_major_version|int == 8
+
+
+- name: Define Facts for List of Packages to Install or Uninstall
+  set_fact:
+    rh_install_pkgs: "{{ rh_common_dep_pkgs ~ ',' ~ rh9_dep_pkgs ~ ',' ~ rh9_python_pkgs }}"
+    rh_uninstall_pkgs: "{{ remove_rh_common_dep_pkgs ~ ',' ~ rh9_dep_pkgs ~ ',' ~ rh9_python_pkgs }}"
+  when: ( ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky" ) and ansible_distribution_major_version|int >= 9
+
+
+- name: Define Fact of Package Names for VMware Postgres
+  set_fact:
+    pgsql_pkg_name: "{{ common.pgsql_pkg_name }}-{{ pgsql.major_version }}.{{ pgsql.minor_version }}-{{ pgsql.patch_version }}.{{ pgsql.os_version }}"
+
+
+- name: Define Fact of Network Address
+  set_fact:
+    pgsql_network_range: "{{ hostvars[inventory_hostname][_netdev]['ipv4']['network'] }}/{{ ( hostvars[inventory_hostname][_netdev]['ipv4']['address'] + '/' + hostvars[inventory_hostname][_netdev]['ipv4']['netmask'] ) | ansible.utils.ipaddr('prefix') }}"
+
+
+- name: Define Fact of Specific IP Address Range
+  set_fact:
+    pgsql_ip_addr_range: "{{ item }}"
+  with_items: "{{ ansible_all_ipv4_addresses }}"
+  when: "item | ansible.utils.ipaddr( pgsql_network_range )"
+

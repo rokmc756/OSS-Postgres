@@ -1,0 +1,58 @@
+---
+- name: Generate a CA Certificate Private Key
+  shell: openssl genrsa -out {{ _ssl.ssl_dir }}/grafana.key 2048
+  register: gen_ca_cert_priv_key
+
+
+- name: Generate a Certificate Signing Request (CSR)
+  shell: |
+    openssl req -sha512 -new \
+    -subj "/C={{ _ssl.ssl_country }}/ST={{ _ssl.ssl_state }}/L={{ _ssl.ssl_location }}/O={{ _ssl.ssl_organization }}/OU={{ _ssl.ssl_organization_unit }}/CN={{ _ssl.ssl_common_name }}/emailAddress={{ _ssl.ssl_email }}" \
+    -key {{ _ssl.ssl_dir }}/grafana.key \
+    -out {{ _ssl.ssl_dir }}/grafana.csr
+  register: gen_cert_sign_req
+
+
+- name: Replace the CRS and CRT File Names
+  shell: |
+    openssl x509 -req -days 365 -in {{ _ssl.ssl_dir }}/grafana.csr -signkey {{ _ssl.ssl_dir }}/grafana.key -out {{ _ssl.ssl_dir }}/grafana.crt
+  register: replace_csr_crt
+
+
+- name: Change Permission
+  file:
+    path: "{{ _ssl.ssl_dir }}/{{ item.file }}"
+    state: "{{ item.state }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+    mode: "{{ item.perm }}"
+  with_items:
+    - { file: "grafana.crt", perm: "0400", owner: "grafana", group: "grafana", state: "file" }
+    - { file: "grafana.key", perm: "0400", owner: "grafana", group: "grafana", state: "file" }
+    - { file: "grafana.csr", perm: "0400", owner: "grafana", group: "grafana", state: "file" }
+  register: change_permission
+
+
+- name: Configure Grafana SSL Configuration
+  lineinfile:
+    dest: "/etc/grafana/{{ item.file }}"
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: "{{ item.state }}"
+    firstmatch: true
+  with_items:
+    - { file: "grafana.ini",  regexp: "^protocol = http",  line: "protocol = https",                        state: present }
+    - { file: "grafana.ini",  regexp: "^cert_file =",     line: "cert_file = /etc/grafana/grafana.crt",    state: present }
+    - { file: "grafana.ini",  regexp: "^cert_key =",      line: "cert_key = /etc/grafana/grafana.key",     state: present }
+  register: config_grafana_ssl
+
+
+- name: Enable and Start Grafana Server
+  systemd:
+    daemon_reexec: true
+    daemon_reload: true
+    name: grafana-server
+    enabled: true
+    state: restarted
+  register: restart_grafana_server
+

@@ -1,0 +1,11 @@
+---
+- hosts: all
+  become: yes
+  vars:
+    print_debug: true
+    uninstall_pkgs: true
+    uninstall_dep_pkgs: true
+    enable_firewall: true
+  roles:
+    - pgautofailover
+    - init-hosts

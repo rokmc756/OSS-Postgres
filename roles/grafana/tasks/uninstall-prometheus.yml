@@ -1,0 +1,43 @@
+---
+- name: Stop and Disable Prometheus and Postgres_Exporter Services
+  systemd:
+    daemon_reexec: true
+    daemon_reload: true
+    name: "{{ item }}"
+    enabled: false
+    state: stopped
+  ignore_errors: true
+  register: stop_prometheus_services
+  with_items:
+    - prometheus
+    - postgres_exporter
+
+
+- name: Delete the Prometheus & Postgres_Exporter Config and Binary Files
+  file: path={{ item.dest }} state=absent
+  ignore_errors: true
+  register: delete_config_files
+  with_items:
+    - { src: "prometheus.yml.j2",              dest: "/usr/local/etc/prometheus.yml" }
+    - { src: "postgres_exporter.systemd.j2",   dest: "/etc/systemd/system/postgres_exporter.service" }
+    - { src: "prometheus.systemd.j2",          dest: "/etc/systemd/system/prometheus.service" }
+    - { src: "prometheus binary",              dest: "/usr/local/bin/prometheus" }
+    - { src: "postgres_exporter binary",       dest: "/usr/local/bin/postgres_exporter" }
+    - { src: "prometheus tar file",            dest: "/root/prometheus-{{ _prometheus.major_version }}.{{ _prometheus.minor_version }}.{{ _prometheus.patch_version }}.linux-amd64.tar.gz" }
+    - { src: "postgres_exporter tar file",     dest: "/root/postgres_exporter-{{ _postgres_exporter.major_version }}.{{ _postgres_exporter.minor_version }}.{{ _postgres_exporter.patch_version }}.linux-amd64" }
+    - { src: "prometheus directory",           dest: "/root/prometheus-{{ _prometheus.major_version }}.{{ _prometheus.minor_version }}.{{ _prometheus.patch_version }}.linux-amd64.tar.gz" }
+    - { src: "postgres_exporter directory",    dest: "/root/postgres_exporter-{{ _postgres_exporter.major_version }}.{{ _postgres_exporter.minor_version }}.{{ _postgres_exporter.patch_version }}.linux-amd64" }
+
+
+- name: Uninstall Dependent and Grafana RPM Packages
+  yum:
+    name: "{{ item }}"
+    state: absent
+  async: 120
+  poll: 5
+  register: uninstall_deps_pkgs
+  ignore_errors: true
+  with_items:
+    - postgresql-contrib
+    - postgresql-devel
+

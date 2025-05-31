@@ -1,0 +1,61 @@
+---
+- name: Install Pip3 Setup Tools Rust
+  shell: |
+    pip3 install setuptools_rust
+  register: install_pip3_setuptools_rust
+  async: 120
+  poll: 5
+  args:
+    executable: /bin/bash
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+
+
+- name: Install Python Pip3 Module
+  shell: |
+    python3 -m pip install --upgrade pip
+  register: install_pip
+  async: 120
+  poll: 5
+  args:
+    executable: /bin/bash
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+
+
+- name: Upgrade Pip3 Setup Tools Rust
+  shell: |
+    pip3 install --upgrade setuptools_rust
+  register: upgrade_pip3_setuptools_rust
+  async: 120
+  poll: 5
+  args:
+    executable: /bin/bash
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+
+
+- name: Upgrade Pillow
+  shell: |
+    python3 -m pip install --upgrade Pillow
+  register: upgrade_pillow
+  async: 120
+  poll: 5
+  args:
+    executable: /bin/bash
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+
+
+- name: Install Wheel
+  shell: |
+    pip3 install wheel
+  register: install_wheel
+  async: 120
+  poll: 5
+  args:
+    executable: /bin/bash
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+
+

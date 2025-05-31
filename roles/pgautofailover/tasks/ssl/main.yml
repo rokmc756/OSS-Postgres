@@ -1,0 +1,30 @@
+---
+- name: Create SSL Keys
+  import_tasks: ssl/create-ssl-keys.yml
+  tags: create, install
+  when: ( key is defined and key == true ) or ( pgautofailover_all is defined and pgautofailover_all == true )
+
+
+- name: Enable SSL on Monitor
+  import_tasks: ssl/enable-ssl-monitor.yml
+  tags: enable, install
+  when: (( monitor is defined and monitor == true ) or ( pgautofailover_all is defined and pgautofailover_all == true )) and inventory_hostname in groups['monitor']
+
+
+- name: Enable SSL on Workers
+  import_tasks: ssl/enable-ssl-workers.yml
+  tags: enable, install
+  when: (( workers is defined and workers == true ) or ( pgautofailover_all is defined and pgautofailover_all == true )) and inventory_hostname in groups['workers']
+
+
+- name: Disable SSL on Monitor
+  import_tasks: ssl/disable-ssl-monitor.yml
+  tags: disable, uninstall
+  when: (( monitor is defined and monitor == true ) or ( pgautofailover_all is defined and pgautofailover_all == true )) and inventory_hostname in groups['monitor']
+
+
+- name: Disable SSL on Workers
+  import_tasks: ssl/disable-ssl-workers.yml
+  tags: disable, uninstall
+  when: (( workers is defined and workers == true ) or ( pgautofailover_all is defined and pgautofailover_all == true )) and inventory_hostname in groups['workers']
+

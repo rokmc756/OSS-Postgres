@@ -1,0 +1,16 @@
+---
+- name: Uninstall PGWatch2 RPM Package File
+  package:
+    name: pgwatch2
+    state: absent
+  register: uninstall_pgwatch2_pkg
+  ignore_errors: true
+  async: 180
+  poll: 5
+
+
+- name: Remove PGWatch2 RPM Package File
+  file: path={{ pgsql.base_path }}/pgwatch2_{{ _pgwatch2.major_version }}.{{ _pgwatch2.minor_version }}.{{ _pgwatch2.patch_version }}_linux_{{ _pgwatch2.arch }}.rpm state=absent
+  register: delete_pgwatch2_rpm
+  ignore_errors: true
+

@@ -1,0 +1,20 @@
+[all:vars]
+ssh_key_filename="id_rsa"
+remote_machine_username="jomoon"
+remote_machine_password="changeme"
+
+# For VMware Postgres PGAutoFailover
+[monitor]
+rk8-master ansible_ssh_host=192.168.0.81
+
+[primary]
+rk8-node01 ansible_ssh_host=192.168.0.83
+
+[secondary]
+rk8-node02 ansible_ssh_host=192.168.0.84
+rk8-node03 ansible_ssh_host=192.168.0.85
+
+[workers]
+rk8-node01 ansible_ssh_host=192.168.0.83
+rk8-node02 ansible_ssh_host=192.168.0.84
+rk8-node03 ansible_ssh_host=192.168.0.85

@@ -1,0 +1,3 @@
+---
+- debug: msg="{{ Let's upgrade grafana }}"
+

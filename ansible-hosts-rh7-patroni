@@ -1,0 +1,16 @@
+[all:vars]
+ssh_key_filename="id_rsa"
+remote_machine_username="jomoon"
+remote_machine_password="changeme"
+
+# For patroni cluster
+[master]
+rh7-master ansible_ssh_host=192.168.0.71
+
+[slave]
+rh7-slave ansible_ssh_host=192.168.0.72
+
+[workers]
+rh7-node01 ansible_ssh_host=192.168.0.73
+rh7-node02 ansible_ssh_host=192.168.0.74
+rh7-node03 ansible_ssh_host=192.168.0.75

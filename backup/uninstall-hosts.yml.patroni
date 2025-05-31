@@ -1,0 +1,32 @@
+---
+- hosts: workers
+  become: yes
+  gather_facts: true
+  vars:
+    print_debug: true
+    stop_patroni_service: true
+    uninstall_pkgs: true
+    uninstall_pip_module: true
+    uninstall_dep_pkgs: true
+    remove_env_config: true
+    remove_firewall_config: true
+  roles:
+    - patroni
+#    - init-hosts
+
+#- hosts: co7-master
+#  become: yes
+#  become_user: root
+#  gather_facts: true
+#  roles:
+#    - { role: haproxy }
+#    - { role: keepalived, keepalived_shared_ip: "192.168.56.89", keepalived_role: "master" }
+
+#- hosts: co7-slave
+#  become: yes
+#  become_user: root
+#  gather_facts: true
+#  roles:
+#    - { role: haproxy }
+#    - { role: keepalived, keepalived_shared_ip: "192.168.0.89", keepalived_role: "slave" }
+

@@ -1,0 +1,20 @@
+---
+- name: Check OS ( HAProxy )
+  fail: msg="Not a Red Hat based system!"
+  when: ansible_os_family != 'RedHat' or ansible_os_family != 'CentOS' or ansible_os_family != 'Rocky'
+
+
+- name: Install HAProxy
+  include: install.yml
+  tags: install
+
+
+- name: Uninstall HAProxy
+  include: uninstall.yml
+  tags: uninstall
+
+
+- name: Upgrade HAProxy
+  include: upgrade.yml
+  tags: upgrade
+

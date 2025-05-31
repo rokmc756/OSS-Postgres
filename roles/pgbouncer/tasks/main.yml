@@ -1,0 +1,39 @@
+---
+- name: Check OS ( PGBouncer )
+  fail: msg="Not a Red Hat based system!"
+  when: ansible_distribution != 'RedHat' or ansible_distribution != 'CentOS' or ansible_distribution != 'Rocky' or ansible_distribution != 'Debian' or ansible_distribution != 'Ubuntu'
+
+
+- name: Set Facts for PGBouncer
+  import_tasks: set-pgbouncer-facts.yml
+  tags:
+    - install
+    - uninstall
+
+
+- name: Install PGBouncer
+  import_tasks: install.yml
+  tags: install
+
+
+- name: Configure PGBouncer
+  import_tasks: configure.yml
+  tags: install
+
+
+- name: Install MonIT
+  import_tasks: monit.yml
+  when: monit_protection is defined and monit_protection == true
+  tags: install
+
+
+- name: Install Collectd
+  import_tasks: collectd.yml
+  when: collectd_monitoring is defined and collectd_monitoring == true
+  tags: install
+
+
+- name: Uninstall PGBouncer
+  import_tasks: uninstall.yml
+  tags: uninstall
+

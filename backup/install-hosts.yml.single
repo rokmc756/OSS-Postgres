@@ -1,0 +1,16 @@
+---
+- hosts: all
+  become: yes
+  vars:
+    print_debug: true
+    install_go: false
+    install_prometheus: false
+    install_grafana: false
+    install_pgwatch2: false
+    install_pkgs: true
+    enable_ssl: true
+  roles:
+    - { role: single }
+#    - { role: init-hosts }
+#    - { role: grafana }
+#    - { role: pgwatch2 }

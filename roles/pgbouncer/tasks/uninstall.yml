@@ -1,0 +1,68 @@
+---
+- name: Stop Services for Monit, Collectd, PGBouncer
+  systemd:
+    name: "{{ item }}"
+    state: stopped
+  ignore_errors: yes
+  with_items:
+    - monit
+    - collectd
+    - pgbouncer
+
+
+- name: Delete All Configuraion Files for Monit, Collectd, PGBouncer
+  file:
+    dest: "{{ item }}"
+    state: absent
+  with_items:
+    - "/var/lib/collectd/python"
+    - "/etc/collectd.d/pgbouncer_gpdb_info.conf"
+    - "/data/master/gpseg-1/pgbouncer"
+    - "/usr/local/greenplum-db/etc/pgbouncer"
+    - "/etc/monit.d/pgbouncer"
+    - "/etc/systemd/system/pgbouncer.service"
+
+
+- name: Reload Systemd Daemon after Deleting PGBouncer Service
+  systemd:
+    daemon_reload: yes
+
+
+- name: Uninstall RPM Packages for PGBouncer Info
+  package:
+    name: "{{ item }}"
+    state: "{{ _pgbouncer.package_state }}"
+  with_items: "{{ _pgbouncer.packages }}"
+
+
+- name: Uninstall Python Collectd Modules for PGBouncer Monitoring
+  shell: ( pip3 uninstall {{ item }} -y )
+  async: 60
+  poll: 5
+  ignore_errors: yes
+  register: pip3_python_collectd_modules_for_pgbouncer
+  with_items:
+    - "collectd"
+
+
+- name: Uninstall Collectd and Monit Package
+  package:
+    name: "{{ item }}"
+    state: absent
+  with_items:
+    - monit
+    - collectd-web
+    - collectd-python
+    - collectd
+    - python-psycopg2
+  # - python2
+
+
+- name: Alternative Python Version to Python3 for Returning Back
+  shell: |
+    alternatives --set python3 /usr/bin/python3.9
+    alternatives --set python /usr/bin/python3.9
+  ignore_errors: yes
+  register: python_version_alternative
+  when: hostvars[inventory_hostname].ansible_distribution_major_version|int <= 9
+

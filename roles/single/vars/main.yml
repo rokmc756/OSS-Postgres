@@ -1,0 +1,97 @@
+---
+_ssl:
+  ssl_dir: "{{ pgsql.base_dir }}/certs"
+  ssl_days: 3660
+  ssl_country: "KR"
+  ssl_state: "Seoul"
+  ssl_location: "Guro"
+  ssl_organization: "VMware"
+  ssl_organization_unit: "Tanzu"
+  ssl_common_name: "jtest.pivotal.io"
+  ssl_email: "jomoon@pivotal.io"
+  enable: true
+
+
+# RHEL or Rocky Linux 8
+# vmware-postgres10-10.21-1.el8.x86_64.rpm            # - OK
+# vmware-postgres10-10.22-1.el8.x86_64.rpm            # - OK
+# vmware-postgres10-10.23-1.el8.x86_64.rpm            # - OK
+# vmware-postgres11-11.16-1.el8.x86_64.rpm            # - OK
+# vmware-postgres11-11.17-1.el8.x86_64.rpm            # - OK
+# vmware-postgres11-11.18-1.el8.x86_64.rpm            # - OK
+# vmware-postgres12-12.11-1.el8.x86_64.rpm            # - OK
+# vmware-postgres12-12.12-1.el8.x86_64.rpm            # - OK
+# vmware-postgres12-12.13-1.el8.x86_64.rpm            # - OK
+# vmware-postgres13-13.7-1.el8.x86_64.rpm             # - OK
+# vmware-postgres13-13.8-1.el8.x86_64.rpm             # - OK
+# vmware-postgres13-13.9-1.el8.x86_64.rpm             # - OK
+# vmware-postgres14-14.3-1.el8.x86_64.rpm             # - OK
+# vmware-postgres14-14.4-1.el8.x86_64.rpm             # - OK
+# vmware-postgres14-14.5-1.el8.x86_64.rpm             # - OK
+# vmware-postgres14-14.6-1.el8.x86_64.rpm             # - OK
+# vmware-postgres15-15.1-1.el8.x86_64.rpm             # - OK
+
+# RHEL or CentOS 7
+# pivotal-postgres-10.10-3.el7.x86_64.rpm            # - 
+# pivotal-postgres-10.10-4.el7.x86_64.rpm            # - 
+# pivotal-postgres-10.10-5.el7.x86_64.rpm            # - 
+# pivotal-postgres-10.11-1.el7.x86_64.rpm            # - 
+# vmware-postgres-10.12-2.el7.x86_64.rpm             # no pgautofailover
+# vmware-postgres-10.12-3.el7.x86_64.rpm             # - 
+# vmware-postgres-10.14-2.el7.x86_64.rpm             # - 
+# vmware-postgres-10.15-0.el7.x86_64.rpm             # - 
+# vmware-postgres-10.16-1.el7.x86_64.rpm             # - 
+# vmware-postgres-10.17-0.el7.x86_64.rpm             # - 
+# vmware-postgres10-10.18-0.el7.x86_64.rpm           # OK , but a little bug
+# vmware-postgres10-10.18-1.el7.x86_64.rpm           # - 
+# vmware-postgres10-10.19-0.el7.x86_64.rpm           # - 
+# vmware-postgres10-10.20-1.el7.x86_64.rpm           # - 
+# vmware-postgres10-10.21-1.el7.x86_64.rpm           # - 
+# vmware-postgres10-10.22-1.el7.x86_64.rpm           # - 
+# vmware-postgres10-10.23-1.el7.x86_64.rpm           # OK
+# pivotal-postgres-11.1-1.el7.x86_64.rpm             # - 
+# pivotal-postgres-11.2-1.el7.x86_64.rpm             # - 
+# pivotal-postgres-11.3-1.el7.x86_64.rpm             # - 
+# pivotal-postgres-11.4-1.el7.x86_64.rpm             # - 
+# pivotal-postgres-11.5-3.el7.x86_64.rpm             # - 
+# pivotal-postgres-11.5-4.el7.x86_64.rpm             # - 
+# pivotal-postgres-11.5-5.el7.x86_64.rpm             # - 
+# pivotal-postgres-11.6-1.el7.x86_64.rpm             # no pgautofailover
+# vmware-postgres-11.7-2.el7.x86_64.rpm              # - 
+# vmware-postgres-11.7-3.el7.x86_64.rpm              # - 
+# vmware-postgres-11.9-2.el7.x86_64.rpm              # - 
+# vmware-postgres-11.10-0.el7.x86_64.rpm             # - 
+# vmware-postgres-11.11-1.el7.x86_64.rpm             # - 
+# vmware-postgres-11.12-0.el7.x86_64.rpm             # - 
+# vmware-postgres11-11.13.0.el7.x86_64.rpm           # OK
+# vmware-postgres11-11.13.1.el7.x86_64.rpm           # - 
+# vmware-postgres11-11.14.1.el7.x86_64.rpm           # - 
+# vmware-postgres11-11.15.0.el7.x86_64.zip           # - 
+# vmware-postgres11-11.15.1.el7.x86_64.zip           # - 
+# vmware-postgres11-11.17-1.el7.x86_64.rpm           # - 
+# vmware-postgres11-11.18-1.el7.x86_64.rpm           # - 
+# vmware-postgres-12.3-1.el7.x86_64.rpm              # - 
+# vmware-postgres-12.4-2.el7.x86_64.rpm              # - 
+# vmware-postgres-12.5-0.el7.x86_64.rpm              # - 
+# vmware-postgres-12.6-1.el7.x86_64.rpm              # - 
+# vmware-postgres-12.7-0.el7.x86_64.rpm              # - 
+# vmware-postgres12-12.8-1.el7.x86_64.rpm            # OK
+# vmware-postgres12-12.10-1.el7.x86_64.rpm           # - 
+# vmware-postgres12-12.11-1.el7.x86_64.rpm           # - 
+# vmware-postgres12-12.12-1.el7.x86_64.rpm           # - 
+# vmware-postgres12-12.13-1.el7.x86_64.rpm           # - 
+# vmware-postgres-13.3-0.el7.x86_64.rpm              # - 
+# vmware-postgres13-13.4-0.el7.x86_64.rpm            # OK
+# vmware-postgres13-13.5-1.el7.x86_64.rpm            # - 
+# vmware-postgres13-13.6-0.el7.x86_64.rpm            # - 
+# vmware-postgres13-13.7-1.el7.x86_64.rpm            # - 
+# vmware-postgres13-13.8-1.el7.x86_64.rpm            # - 
+# vmware-postgres13-13.9-1.el7.x86_64.rpm            # - 
+# vmware-postgres14-14.0-0.el7.x86_64.rpm            #  
+# vmware-postgres14-14.1-1.el7.x86_64.rpm            # - 
+# vmware-postgres14-14.2-1.el7.x86_64.rpm            # - 
+# vmware-postgres14-14.3-1.el7.x86_64.rpm            # - 
+# vmware-postgres14-14.4-1.el7.x86_64.rpm            # - 
+# vmware-postgres14-14.5-1.el7.x86_64.rpm            # - 
+# vmware-postgres14-14.6-1.el7.x86_64.rpm            # OK
+# vmware-postgres15-15.1-1.el7.x86_64.rpm            # OK

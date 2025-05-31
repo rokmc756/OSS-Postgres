@@ -1,0 +1,34 @@
+---
+- hosts: all
+  become: yes
+  vars:
+    print_debug: true
+    install_pkgs: true
+    install_dep_pkgs: true
+    install_go: true
+    install_prometheus: true
+    install_grafana: true
+    install_pgwatch2: true
+  roles:
+    - { role: init-hosts }
+    - { role: single }
+    - { role: grafana }
+    - { role: pgwatch2 }
+
+#
+#- hosts: all
+#  become: yes
+#  vars:
+#    print_debug: true
+#    uninstall_pkgs: true
+#    uninstall_dep_pkgs: true
+#    uninstall_pkgs: true
+#    uninstall_go: true
+#    uninstall_prometheus: true
+#    uninstall_grafana: true
+#    uninstall_pgwatch2: true
+#  roles:
+#    - { role: pgwatch2 }
+#    - { role: grafana }
+#    - { role: single }
+#    - { role: init-hosts }

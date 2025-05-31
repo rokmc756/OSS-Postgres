@@ -1,0 +1,15 @@
+- hosts: all
+  become: yes
+  vars:
+    print_debug: true
+    uninstall_pkgs: true
+    uninstall_dep_pkgs: false
+    uninstall_go: true
+    uninstall_prometheus: true
+    uninstall_grafana: true
+    uninstall_pgwatch2: true
+  roles:
+    - { role: single }
+#    - { role: init-hosts }
+#    - { role: grafana }
+#    - { role: pgwatch2 }

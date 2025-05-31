@@ -1,0 +1,22 @@
+[all:vars]
+ssh_key_filename="id_rsa"
+remote_machine_username="jomoon"
+remote_machine_password="changeme"
+
+
+# For PGAutofailover
+[monitor]
+rk9-node01 ansible_ssh_host=192.168.1.71 zk_id=1
+
+[primary]
+rk9-node03 ansible_ssh_host=192.168.1.73 zk_id=3
+
+[secondary]
+rk9-node04 ansible_ssh_host=192.168.1.74 zk_id=4
+rk9-node05 ansible_ssh_host=192.168.1.75 zk_id=5
+
+[workers]
+rk9-node03 ansible_ssh_host=192.168.1.73 zk_id=3
+rk9-node04 ansible_ssh_host=192.168.1.74 zk_id=4
+rk9-node05 ansible_ssh_host=192.168.1.75 zk_id=5
+

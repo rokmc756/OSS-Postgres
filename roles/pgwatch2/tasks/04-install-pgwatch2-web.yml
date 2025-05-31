@@ -1,0 +1,19 @@
+---
+- name: Create the PGWatch2 Web Systemd Unit File
+  template: src={{ item.src }} dest={{ item.dest }} owner={{ item.owner }} group={{ item.group }} mode=644 force=yes
+  register: create_etcd_config
+  with_items:
+    - { src: 'pgwatch2-web.systemd.j2', dest: '/etc/systemd/system/pgwatch2-web.service', owner: 'root', group: 'root' }
+
+
+- name: Reload and Start PGWatch2 Web Service
+  systemd:
+    daemon_reexec: true
+    daemon_reload: true
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  register: start_pgwatch2_web
+  with_items:
+    - pgwatch2-web
+

@@ -1,0 +1,64 @@
+---
+- name: Copy ETCD {{ etcd.major_version }}.{{ etcd.minor_version }} RPM Package
+  copy:
+    src: "{{ item }}"
+    dest: "{{ common.sudo_user_home_dir }}/{{ item }}"
+    mode: 0644
+    owner: "{{ common.sudo_user }}"
+    group: "{{ common.sudo_group }}"
+  register: copy_etcd_rpm_packages
+  with_items:
+    - "{{ etcd_pkg_name }}-{{ _etcd.build_version }}.{{ _etcd.os_version }}.{{ _etcd.arch_type }}.{{ _etcd.bin_type }}"
+  when: hostvars[inventory_hostname].ansible_distribution_major_version|int == 8
+
+
+- name: Install ETCD RPM Package and Prerequistes RPMS of Patroni RPM Package
+  yum:
+    name: "{{ item }}"
+    state: present
+    skip_broken: yes
+  async: 180
+  poll: 5
+  register: install_etcd_prereq_rpm_packages
+  with_items:
+    - python-psycopg2
+    - etcd
+  when: hostvars[inventory_hostname].ansible_distribution_major_version|int == 7
+
+
+- name: Install ETCD RPM Package for Worker nodes
+  yum:
+    name: "{{ common.sudo_user_home_dir }}/{{ item }}"
+    state: present
+    disable_gpg_check: yes
+  async: 60
+  poll: 5
+  register: install_etcd_rpm_packages
+  with_items:
+    - "{{ etcd_pkg_name }}-{{ _etcd.build_version }}.{{ _etcd.os_version }}.{{ _etcd.arch_type }}.{{ _etcd.bin_type }}"
+  when: hostvars[inventory_hostname].ansible_distribution_major_version|int == 8
+
+
+- name: Download ETCD Binary for Worker Nodes
+  copy: src=https://github.com/etcd-io/etcd/releases/download/v{{ _etcd_main_version }}/etcd-v{{ _etcd_main_version }}-linux-amd64.tar.gz dest=/tmp owner=root mode=755
+  when: ( _etcd.download_bin == true and hostvars[inventory_hostname].ansible_distribution_major_version|int >= 9 )
+
+
+- name: Copy ETCD Tarball for Worker Nodes
+  copy: src=etcd-v{{ etcd_main_version }}-linux-amd64.tar.gz dest=/tmp owner=root mode=755
+  when: ( _etcd.download_bin == false and hostvars[inventory_hostname].ansible_distribution_major_version|int >= 9 )
+
+
+- name: Unzip ETCD Binary for Worker Nodes
+  shell: "tar zxf /tmp/etcd-v{{ etcd_main_version }}-linux-amd64.tar.gz -C /tmp"
+  when: hostvars[inventory_hostname].ansible_distribution_major_version|int >= 9
+
+
+- name: Copy ETCD Binary for Worker Nodes
+  shell: "cp /tmp/etcd-v{{ etcd_main_version }}-linux-amd64/{{ item }} /usr/bin/"
+  with_items:
+    - etcd
+    - etcdctl
+  when: hostvars[inventory_hostname].ansible_distribution_major_version|int >= 9
+
+

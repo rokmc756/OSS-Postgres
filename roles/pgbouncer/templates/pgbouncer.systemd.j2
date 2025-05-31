@@ -1,0 +1,21 @@
+[Unit]
+Description=pgBouncer connection pooling for PostgreSQL
+# After=greenplum.service
+
+[Service]
+Type=forking
+User=gpadmin
+Group=gpadmin
+
+PermissionsStartOnly=true
+# ExecStartPre=-/usr/bin/mkdir -p /var/run/pgbouncer /var/log/pgbouncer
+# ExecStartPre=/usr/bin/chown -R postgres:postgres /var/run/pgbouncer /var/log/pgbouncer
+
+ExecStart={{ gpdb.base_dir }}/greenplum-db/bin/pgbouncer -d {{ _pgbouncer.confdir }}/pgbouncer.ini
+ExecReload=/bin/kill -SIGHUP $MAINPID
+PIDFile={{ _pgbouncer.pidfile }}
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target
+

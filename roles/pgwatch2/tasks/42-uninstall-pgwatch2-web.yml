@@ -1,0 +1,21 @@
+---
+- name: Stop and Disable PGWatch2 Web Service
+  systemd:
+    daemon_reexec: true
+    daemon_reload: true
+    name: "{{ item }}"
+    enabled: false
+    state: stopped
+  register: stop_pgwatch2_web_service
+  ignore_errors: true
+  with_items:
+    - pgwatch2-web
+
+
+- name: Delete the PGWatch2 Web Systemd Unit File
+  file: path={{ item.dest }} state=absent
+  register: delete_systemd_unit_files
+  ignore_errors: true
+  with_items:
+    - { src: 'pgwatch2-web.systemd.j2', dest: '/etc/systemd/system/pgwatch2-web.service', owner: 'root', group: 'root' }
+

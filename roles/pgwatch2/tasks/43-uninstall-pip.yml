@@ -1,0 +1,60 @@
+---
+- name: Uninstall PG Metrics
+  shell: |
+    pip3 uninstall -y -r /etc/pgwatch2/webpy/requirements_pg_metrics.txt
+  register: uninstall_wheel
+  async: 120
+  poll: 5
+  args:
+    executable: /bin/bash
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+
+
+- name: Uninstall Wheel
+  shell: |
+    pip3 uninstall -y wheel
+  register: uninstall_wheel
+  async: 120
+  poll: 5
+  args:
+    executable: /bin/bash
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+
+
+- name: Uninstall Pillow
+  shell: |
+    pip3 uninstall -y Pillow
+  register: uninstall_pillow
+  async: 120
+  poll: 5
+  args:
+    executable: /bin/bash
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+
+
+- name: Uninstall Pip3 Setup Tools Rust
+  shell: |
+    pip3 uninstall -y setuptools_rust
+  register: uninstall_pip3_setuptools_rust
+  async: 120
+  poll: 5
+  args:
+    executable: /bin/bash
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+
+
+- name: Install Pip3 Setup Tools Rust
+  shell: |
+    pip3 install setuptools_rust
+  register: install_pip3_setuptools_rust
+  async: 120
+  poll: 5
+  args:
+    executable: /bin/bash
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+

@@ -1,0 +1,122 @@
+---
+- name: Initialize VMware Postgres Database Instance
+  become_user: postgres
+  shell: |
+    source {{ pgsql.base_dir }}/.bash_profile
+    {{ common.pgsql_bin_dir }}/initdb -D {{ pgsql.base_dir }}/data
+  register: init_postgres_instance
+  args:
+    chdir: "{{ pgsql.base_dir }}"
+    executable: /bin/bash
+
+
+- name: Create a Single Non-HA VMware Postgres Database Server
+  become_user: postgres
+  shell: |
+    source {{ pgsql.base_dir }}/.bash_profile
+    {{ common.pgsql_bin_dir }}/postgres -D {{ pgsql.base_dir }}/data > {{ pgsql.base_dir }}/logfile 2>&1 &
+  register: create_postgres_instance
+  args:
+    chdir: "{{ pgsql.base_dir }}"
+    executable: /bin/bash
+
+
+- name: Verify that the psql of VMware Postgres is Installed Properly
+  become_user: postgres
+  shell: |
+    source {{ pgsql.base_dir }}/.bash_profile
+    {{ common.pgsql_bin_dir }}/psql -c "select version()"
+  register: verify_postgres_install
+  args:
+    chdir: "{{ pgsql.base_dir }}"
+    executable: /bin/bash
+
+
+- name: Verify that the pg_ctl of VMware Postgres is Installed Properly
+  become_user: postgres
+  shell: |
+    source {{ pgsql.base_dir }}/.bash_profile
+    {{ common.pgsql_bin_dir }}/pg_ctl -V
+  register: verify_pg_ctl_install
+  args:
+    chdir: "{{ pgsql.base_dir }}"
+    executable: /bin/bash
+
+
+- name: Insert the Line of Executable Binary Path into .bashrc for VMware Postgres {{ pgsql.major_version }}
+  become_user: postgres
+  lineinfile:
+    path: "{{ item }}"
+    line: "export PATH={{ common.pgsql_bin_dir }}:$PATH"
+  with_items:
+    - "{{ pgsql.base_dir }}/.bash_profile"
+    - "{{ pgsql.home_dir }}/.bash_profile"
+
+
+- name: Grant User Access from Network Access for Access with Cert Authentication
+  become_user: postgres
+  vars:
+    ansible_python_interpreter: "/usr/bin/python3"
+  postgresql_pg_hba:
+    dest: /var/lib/pgsql/data/pg_hba.conf
+    contype: host
+    users: all
+    source: "{{ pgsql_network_range }}"
+    databases: all
+    method: trust
+
+
+- name: Replace Database Directory
+  become_user: postgres
+  replace:
+    path: "{{ pgsql.base_dir }}/.bash_profile"
+    regexp: '^(.*)PGDATA=(.*)$'
+    replace: 'PGDATA=/{{ pgsql.base_dir }}/data'
+    backup: yes
+
+
+#- name: Change the Permissions on the Database Directory in {{ pgsql.base_dir }} Directory
+#  become_user: postgres
+#  file:
+#    path: "{{ pgsql.base_dir }}/{{ item }}"
+#    state: directory
+#    mode: 0750
+#  register: change_data_directories_permission
+#  with_items:
+#    - "backups"
+#    - "data"
+#  when: pgsql.major_version|int >= 11
+
+
+#- name: Change the Permissions on the Database Directory in {{ pgsql.base_dir }} Directory
+#  become_user: postgres
+#  file:
+#    path: "{{ pgsql.base_dir }}/{{ item }}"
+#    state: directory
+#    mode: 0700
+#  register: change_data_directories_permission
+#  with_items:
+#    - "backups"
+#    - "data"
+#  when: pgsql.major_version|int < 11
+
+
+#- name: Change the Permissions on the /tmp Directory
+#  file:
+#    path: /tmp
+#    state: directory
+#    mode: 0777
+#  register: change_tmp_dir_permission
+
+
+- name: Verify the Current State of Postgres
+  become_user: postgres
+  shell: |
+    source {{ pgsql.base_dir }}/.bash_profile
+    {{ common.pgsql_bin_dir }}/psql -c "\l"
+  register: verify_postgres_state
+  args:
+    chdir: "{{ pgsql.base_dir }}"
+    executable: /bin/bash
+- debug: msg={{ verify_postgres_state }}
+

@@ -1,0 +1,22 @@
+---
+- name: Check if the GO File Already Exists
+  stat: path={{ pgsql.base_path }}/go{{ _go.major_version }}.{{ _go.minor_version }}.{{ _go.patch_version }}.linux-amd64.tar.gz
+  register: check_go_file
+
+
+- name: Check if the GO Binary and Directory Already Exists
+  stat: path=/usr/local/go
+  register: check_go_bin
+
+
+- name: Delete the GO File
+  file: path={{ pgsql.base_path }}/go{{ _go.major_version }}.{{ _go.minor_version }}.{{ _go.patch_version }}.linux-amd64.tar.gz state=absent
+  register: delete_go_file
+  when: check_go_file.stat.exists == True
+
+
+- name: Delete the GO Bin and Directory
+  file: path=/usr/local/go state=absent
+  register: delete_go_bin
+  when: check_go_bin.stat.exists == True
+

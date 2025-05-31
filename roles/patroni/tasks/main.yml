@@ -1,0 +1,105 @@
+---
+- name: Check OS ( Patroni )
+  fail: msg="Not a Red Hat based system!"
+  when: ansible_os_family != 'RedHat' or ansible_os_family != 'CentOS' or ansible_os_family != 'Rocky'
+
+
+- name: Set Facts for network, package variables
+  import_tasks: 00-set-facts.yml
+  tags: install, uninstall, config, enable, add, remove
+
+
+- name: Enabling firewalld and configure firewall ruleset on for VMware Postgres Patroni Cluster
+  import_tasks: 01-config-firewall.yml
+  tags: install, config
+  when: ( firewall is defined and firewall == true ) or ( patroni_all is defined and patroni_all == true )
+
+
+- name: Install Dependent RPM Packages for VMware Postgres Patroni Software
+  import_tasks: 02-install-dep-pkgs.yml
+  tags: install
+  when: ( pkgs is defined and pkgs == true ) or ( patroni_all is defined and patroni_all == true )
+
+
+- name: Install RPM and Python packages for VMware Postgres Patroni Software
+  import_tasks: 04-install-pkgs.yml
+  tags: install
+  when: ( pkgs is defined and pkgs == true ) or ( patroni_all is defined and patroni_all == true )
+
+
+- name: Install Dependent Python Modules for VMware Postgres Patroni Software
+  import_tasks: 03-install-pip-module.yml
+  tags: install
+  when: ( pkgs is defined and pkgs == true ) or ( patroni_all is defined and patroni_all == true )
+
+
+- name: Install ETCD binary for VMware Postgres Patroni Cluster
+  import_tasks: 05-install-etcd.yml
+  tags: install
+  when: ( etcd is defined and etcd == true ) or ( patroni_all is defined and patroni_all == true )
+
+
+- name: Preparing environment for VMware Postgres Patroni Cluster
+  import_tasks: 06-config-env.yml
+  tags: install, config
+  when: ( env is defined and env == true ) or ( patroni_all is defined and patroni_all == true )
+
+
+- name: Enable SSL in VMware Postgres Patroni Cluster
+  import_tasks: 07-enable-ssl.yml
+  tags: install, enable, config
+  when: ( ssl is defined and ssl == true ) or ( patroni_all is defined and patroni_all == true )
+
+
+- name: Configure VMware Postgres Patroni Cluster
+  import_tasks: 08-config-patroni.yml
+  tags: install, config
+  when: ( patroni is defined and patroni == true ) or ( patroni_all is defined and patroni_all == true )
+
+
+- name: Add users into VMware Postgres Patroni Cluster
+  import_tasks: 09-add-users.yml
+  tags: install, add
+  when: ( user is defined and user == true ) or ( patroni_all is defined and patroni_all == true )
+
+
+- name: Stop Patroni Service
+  import_tasks: 41-stop-patroni-service.yml
+  tags: uninstall, stop
+  when: ( service is defined and service == true ) or ( patroni_all is defined and patroni_all == true )
+
+
+- name: Uninstall Packages for VMware Postgres and Patroni
+  import_tasks: 42-uninstall-pkgs.yml
+  tags: uninstall
+  when: ( pkgs is defined and pkgs == true ) or ( patroni_all is defined and patroni_all == true )
+
+
+- name: Uninstall PIP module
+  import_tasks: 43-uninstall-pip-module.yml
+  tags: uninstall
+  when: ( pkgs is defined and pkgs == true ) or ( patroni_all is defined and patroni_all == true )
+
+
+- name: Uninstall dependent RPM Packages for VMware Postgres and Patroni
+  import_tasks: 44-uninstall-dep-pkgs.yml
+  tags: uninstall
+  when: ( pkgs is defined and pkgs == true ) or ( patroni_all is defined and patroni_all == true )
+
+
+- name: Remove config files of environment for VMware Postgres and Patroni
+  import_tasks: 45-remove-config-files.yml
+  tags: uninstall, remove
+  when: ( env is defined and env == true ) or ( patroni_all is defined and patroni_all == true )
+
+
+- name: Disable firewalld config
+  import_tasks: 46-disable-firewalld-config.yml
+  tags: uninstall, disable, remove
+  when: ( firewall is defined and firewall == true ) or ( patroni_all is defined and patroni_all == true )
+
+
+- name: Upgrade VMware Postgres Patroni Cluser
+  import_tasks: upgrade/upgrade.yml
+  tags: upgrade
+

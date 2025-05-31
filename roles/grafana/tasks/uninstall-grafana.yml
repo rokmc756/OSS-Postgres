@@ -1,0 +1,50 @@
+---
+- name: Stop and Disable Grafana Services
+  systemd:
+    daemon_reexec: true
+    daemon_reload: true
+    name: "{{ item }}"
+    enabled: false
+    state: stopped
+  register: stop_grafana_services
+  ignore_errors: true
+  with_items:
+    - grafana-server
+    - influxdb
+
+
+- name: Uninstall Dependent and Grafana RPM Packages
+  package:
+    name: "{{ item }}"
+    state: present
+    # skip_broken: yes
+  register: uninstall_pkgs
+  ignore_errors: true
+  async: 120
+  poll: 5
+  with_items:
+    - influxdb2-cli
+    - influxdb2
+    - grafana-pcp
+    - grafana
+
+
+- name: Delete the Config Files
+  file: path={{ item.dest }} state=absent
+  register: delete_config_files
+  ignore_errors: true
+  with_items:
+    - { src: "grafana.ini.j2",       dest: "/etc/grafana/grafana.ini" }
+    - { src: "influxdata.repo.j2",   dest: "/etc/yum.repos.d/influxdata.repo" }
+    - { src: "grafana.crt",          dest: "/etc/grafana/grafana.crt" }
+    - { src: "grafana.key",          dest: "/etc/grafana/grafana.key" }
+    - { src: "grafana.csr",          dest: "/etc/grafana/grafana.csr" }
+
+
+- name: Delete the Config Directories
+  file: path={{ item.dest }} state=absent
+  register: delete_config_dirs
+  ignore_errors: true
+  with_items:
+    - { src: "grafana.ini.j2",       dest: "/var/lib/grafana/*" }
+

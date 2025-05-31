@@ -1,0 +1,53 @@
+---
+- name: Alternative Python Version
+  shell: |
+    /usr/sbin/update-alternatives --install /usr/bin/python python {{ yum_python_version }} 1
+    /usr/sbin/alternatives --set python {{ yum_python_version }}
+  register: alternatives_python
+  ignore_errors: true
+  when: ansible_distribution == 'RedHat' or ansible_distribution == 'CentOS' or ansible_distribution == 'Rocky'
+
+
+- name: Uninstall VMware Postgres Patroni RPM Package
+  package:
+    name: "{{ item }}"
+    state: absent
+  register: uninstall_patroni_rpm_packages
+  ignore_errors: true
+  with_items:
+    - "{{ patroni_pkg_name }}"
+  vars:
+    ansible_python_interpreter: "{{ yum_python_version }}"
+  when: _patroni.with_pkgs == true
+
+
+- name: Uninstall VMware Postgres RPM Packages
+  package:
+    name: "{{ item }}"
+    state: absent
+  register: delete_vmware_postgres_rpm_packages
+  ignore_errors: true
+  with_items:
+    - "{{ pgsql_pkg_name }}"
+    - "vmware-postgres"
+  vars:
+    ansible_python_interpreter: "{{ yum_python_version }}"
+
+
+- name: Delete the VMware Postgres {{ pgsql.major_version }} Patroni RPM File
+  file:
+    path: "{{ pgsql.sudo_user_dir }}/{{ patroni_pkg_name }}-{{ _patroni.build_version }}.{{ _patroni.os_version }}.x86_64.rpm"
+    state: absent
+  register: delete_patroni_rpm_packages
+  ignore_errors: true
+  when: _patroni.with_pkgs == true
+
+
+- name: Delete the VMware Postgres {{ pgsql.major_version }} Patroni RPM File
+  file:
+    path: "{{ pgsql.sudo_user_dir }}/{{ pgsql_pkg_name }}.x86-64.rpm"
+    state: absent
+  register: delete_vmware_postgres_rpm_packages
+  ignore_errors: true
+
+

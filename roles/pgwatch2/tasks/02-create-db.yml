@@ -1,0 +1,47 @@
+---
+- name: Create the Database Specified in Vars
+  become_user: postgres
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+  postgresql_db: name={{ item }} template='template0' state=present login_host=localhost login_user=postgres login_unix_socket=/tmp
+  with_items:
+    - "pgwatch2"
+    - "pgwatch2_metrics"
+    - "pgwatch2_grafana"
+
+
+- name: Create a User to the PGWatch2 Schema. Typically called PGWatch2, But can be Anything Really, if the Schema Creation File is Adjusted Accordingly.
+  become_user: postgres
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+  postgresql_user: name={{ item.name }} db={{ item.db }} password={{ item.pass }} priv={{ item.priv }} state=present login_host=localhost login_user=postgres login_unix_socket=/tmp
+  with_items:
+    - { db: 'pgwatch2', name: 'pgwatch2', pass: 'changeme', priv: 'ALL' }
+    - { db: 'pgwatch2_grafana', name: 'pgwatch2_grafana', pass: 'changeme', priv: 'ALL' }
+
+
+- name: Ensure User Does Not Have Unnecessary Permissions
+  become_user: postgres
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+  postgresql_user: name={{ item.name }} role_attr_flags={{ item.role }} state=present login_host=localhost login_user=postgres login_unix_socket=/tmp
+  with_items:
+    - { name: 'pgwatch2', role: 'SUPERUSER' }
+    - { name: 'pgwatch2_grafana', role: 'SUPERUSER' }
+
+
+- name: Roll Out the PGWatch2 Config Schema and Bootstrap the Metrics Storage DB
+  become_user: postgres
+  shell: |
+    psql -h localhost -U {{ item.user }} -d {{ item.db }} -f {{ item.file }}
+  args:
+    chdir: "{{ item.dir }}"
+    executable: /bin/bash
+  environment:
+    PATH: "/opt/vmware/postgres/{{ pgsql.major_version }}/bin:{{ ansible_env.PATH }}"
+  register: create_config_metrics_storage
+  with_items:
+    - { dir: "/etc/pgwatch2/sql/config_store", file: "config_store.sql", user: "pgwatch2", db: "pgwatch2" }
+    - { dir: "/etc/pgwatch2/sql/config_store", file: "metric_definitions.sql", user: "pgwatch2", db: "pgwatch2" }
+    - { dir: "/etc/pgwatch2/sql/metric_store", file: "roll_out_metric_time.psql", user: "pgwatch2", db: "pgwatch2_metrics" }
+

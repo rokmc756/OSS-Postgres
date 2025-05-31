@@ -1,0 +1,5 @@
+I think root cause analysis is more important than retrospective.
+This is because retrospection is a way of approaching issues with intuition and intuition based on experience,
+which may not be effective in reality, whereas root cause analysis is based on more specific and factual evidence based on facts,
+so reasonable conclusions can be drawn. Because you can.
+

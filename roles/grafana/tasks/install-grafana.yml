@@ -1,0 +1,82 @@
+---
+- name: Copy InfluxDB Package Repo file
+  template: src={{ item.src }} dest={{ item.dest }} owner=root group=root mode=644 force=yes
+  register: copy_influxdb_repo_config
+  with_items:
+    - { src: "influxdata.repo.j2",   dest: "/etc/yum.repos.d/influxdata.repo" }
+
+
+- name: Install Dependent and Grafana RPM Packages
+  yum:
+    name: "{{ item }}"
+    state: present
+    # skip_broken: yes
+  async: 120
+  poll: 5
+  with_items:
+    - influxdb2
+    - influxdb2-cli
+    - grafana
+    - grafana-pcp
+
+
+- name: Copy the Grafana Ini File
+  template: src={{ item.src }} dest={{ item.dest }} owner=root group=root mode=644 force=yes
+  register: copy_systemd_file
+  with_items:
+    - { src: "grafana.ini.j2",                   dest: "/etc/grafana/grafana.ini" }
+
+
+- name: Reload and Start Grafana Services
+  systemd:
+    daemon_reexec: true
+    daemon_reload: true
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  register: start_grafana
+  until: start_grafana is succeeded
+  retries: 3
+  delay: 10
+  with_items:
+    - influxdb
+    - grafana-server
+
+
+- name: Setup PGWatch2 Metrics Database As Default Datasource
+  become_user: postgres
+  shell: |
+    psql -h localhost -U {{ item.user }} -d {{ item.db }} -f {{ item.file }}
+  register: setup_metrics_database
+  args:
+    chdir: "{{ item.dir }}"
+    executable: /bin/bash
+  environment:
+    PATH: "/opt/vmware/postgres/{{ pgsql.major_version }}/bin:{{ ansible_env.PATH }}"
+  with_items:
+    - { dir: "/etc/pgwatch2/bootstrap", file: "grafana_datasource.sql", user: "pgwatch2_grafana", db: "pgwatch2_grafana" }
+
+
+- name: Add PGWatch2 Predefined Dashboards to Grafana
+  shell: |
+    /etc/pgwatch2/grafana-dashboards/import_all.sh
+  async: 120
+  poll: 5
+  register: add_grafana_dashboard
+  args:
+    executable: /bin/bash
+  environment:
+    PATH: "/opt/vmware/postgres/{{ pgsql.major_version }}/bin:{{ ansible_env.PATH }}"
+
+
+- name: Install Grafana Plugin
+  shell: |
+    grafana-cli plugins install savantly-heatmap-panel
+  async: 120
+  poll: 5
+  register: install_grafana_plugin
+  args:
+    executable: /bin/bash
+  environment:
+    PATH: "/opt/vmware/postgres/{{ pgsql.major_version }}/bin:{{ ansible_env.PATH }}"
+

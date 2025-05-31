@@ -1,0 +1,166 @@
+pgautofailvoer:
+	@if [ "${r}" = "init" ] || [ "${r}" = "uninit" ] || [ "${r}" = "reinit" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-pgautofailvoer.yml -e '{"${s}": True}' --tags='${r}';\
+			elif [ ! -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-pgautofailvoer.yml -e '{"${s}": True}' -e '{"${c}": True}' --tags='${r}';\
+			else\
+				echo "No actions to init/uninit/reinit pgautofailvoer";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-pgautofailvoer.yml -e '{pgautofailvoer_all: True}' --tags='${r}';\
+			elif [ ! -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-pgautofailvoer.yml -e '{"${s}": True}' -e '{"${c}": True}' --tags='${r}';\
+			else\
+				echo "No actions to init/uninit/reinit pgautofailvoer";\
+			fi\
+		else\
+			echo "No actions to init/uninit/reinit pgautofailvoer";\
+		fi;\
+	elif [ "${r}" = "prepare" ] || [ "${r}" = "clean" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-pgautofailvoer.yml -e '{"${s}": True}' --tags='${r}';\
+			elif [ ! -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-pgautofailvoer.yml -e '{"${s}": True}' -e '{"${c}": True}' --tags='${r}';\
+			else\
+				echo "No actions to prepare/clean pgautofailvoer";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-pgautofailvoer.yml -e '{pgautofailvoer_all: True}' --tags='${r}';\
+			elif [ ! -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-pgautofailvoer.yml -e '{"${s}": True}' -e '{"${c}": True}' --tags='${r}';\
+			else\
+				echo "No actions to prepare/clean pgautofailvoer";\
+			fi\
+		else\
+			echo "No actions to prepare/clean pgautofailvoer";\
+		fi;\
+	elif [ "${r}" = "enable" ] || [ "${r}" = "disable" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-pgautofailvoer.yml -e '{"${s}": True}' --tags='${r}';\
+			elif [ ! -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-pgautofailvoer.yml -e '{"${s}": True}' -e '{"${c}": True}' --tags='${r}';\
+			else\
+				echo "No actions to ennable/disable pgautofailvoer";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-pgautofailvoer.yml -e '{pgautofailvoer_all: True}' --tags='${r}';\
+			elif [ ! -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-pgautofailvoer.yml -e '{"${s}": True}' -e '{"${c}": True}' --tags='${r}';\
+			else\
+				echo "No actions to ennable/disable pgautofailvoer";\
+			fi\
+		else\
+			echo "No actions to ennable/disable pgautofailvoer";\
+		fi;\
+	elif [ "${r}" = "deploy" ] || [ "${r}" = "destroy" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-pgautofailvoer.yml -e '{"${s}": True}' --tags='${r}';\
+			elif [ ! -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-pgautofailvoer.yml -e '{"${s}": True}' -e '{"${c}": True}' --tags='${r}';\
+			else\
+				echo "No actions to install/uninstall pgautofailvoer";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-pgautofailvoer.yml -e '{pgautofailvoer_all: True}' --tags='${r}';\
+			elif [ ! -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-pgautofailvoer.yml -e '{"${s}": True}' -e '{"${c}": True}' --tags='${r}';\
+			else\
+				echo "No actions to install/uninstall pgautofailvoer";\
+			fi\
+		else\
+			echo "No actions to install/uninstall pgautofailvoer";\
+		fi;\
+	elif [ "${r}" = "install" ] || [ "${r}" = "uninstall" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-pgautofailvoer.yml -e '{"${s}": True}' --tags='${r}';\
+			elif [ ! -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-pgautofailvoer.yml -e '{"${s}": True}' -e '{"${c}": True}' --tags='${r}';\
+			else\
+				echo "No actions to install/uninstall pgautofailvoer";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-pgautofailvoer.yml -e '{pgautofailvoer_all: True}' --tags='${r}';\
+			elif [ ! -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-pgautofailvoer.yml -e '{"${s}": True}' -e '{"${c}": True}' --tags='${r}';\
+			else\
+				echo "No actions to install/uninstall pgautofailvoer";\
+			fi\
+		else\
+			echo "No actions to install/uninstall pgautofailvoer";\
+		fi;\
+	elif [ "${r}" = "create" ] || [ "${r}" = "delete" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-pgautofailvoer.yml -e '{"${s}": True}' --tags='${r}';\
+			elif [ ! -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-pgautofailvoer.yml -e '{"${s}": True}' -e '{"${c}": True}' --tags='${r}';\
+			else\
+				echo "No actions to create/delete pgautofailvoer";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-pgautofailvoer.yml -e '{pgautofailvoer_all: True}' --tags='${r}';\
+			elif [ ! -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-pgautofailvoer.yml -e '{"${s}": True}' -e '{"${c}": True}' --tags='${r}';\
+			else\
+				echo "No actions to create/delete pgautofailvoer";\
+			fi\
+		else\
+			echo "No actions to create/delete pgautofailvoer";\
+		fi;\
+	elif [ "${r}" = "add" ] || [ "${r}" = "remove" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-pgautofailvoer.yml -e '{"${s}": True}' --tags='${r}';\
+			elif [ ! -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-pgautofailvoer.yml -e '{"${s}": True}' -e '{"${c}": True}' --tags='${r}';\
+			else\
+				echo "No actions to add/remove pgautofailvoer";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-pgautofailvoer.yml -e '{pgautofailvoer_all: True}' --tags='${r}';\
+			elif [ ! -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-pgautofailvoer.yml -e '{"${s}": True}' -e '{"${c}": True}' --tags='${r}';\
+			else\
+				echo "No actions to add/remove pgautofailvoer";\
+			fi\
+		else\
+			echo "No actions to add/remove pgautofailvoer";\
+		fi;\
+	elif [ "${r}" = "upgrade" ] || [ "${r}" = "downgrade" ]; then\
+		if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-pgautofailvoer.yml -e '{"${s}": True}' --tags='${r}';\
+			elif [ ! -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-pgautofailvoer.yml -e '{"${s}": True}' -e '{"${c}": True}' --tags='${r}';\
+			else\
+				echo "No actions to upgrade/downgrade pgautofailvoer";\
+			fi\
+		elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+			if [ -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-pgautofailvoer.yml -e '{pgautofailvoer_all: True}' --tags='${r}';\
+			elif [ ! -z ${c} ];  then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-pgautofailvoer.yml -e '{"${s}": True}' -e '{"${c}": True}' --tags='${r}';\
+			else\
+				echo "No actions to upgrade/downgrade pgautofailvoer";\
+			fi\
+		else\
+			echo "No actions to upgrade/downgrade pgautofailvoer";\
+		fi;\
+	else\
+		echo "No actions to pgautofailvoer role";\
+		exit;\
+	fi
+

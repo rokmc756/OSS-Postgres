@@ -1,0 +1,65 @@
+---
+- name: Check OS ( Grafana & Prometheus )
+  fail: msg="Not a Red Hat based system!"
+  when: ansible_os_family != 'RedHat' or ansible_os_family != 'CentOS' or  ansible_os_family != 'Rocky'
+
+
+- name: Install GO Language
+  import_tasks: install-go.yml
+  tags: install, delete
+  when: ( go is defined and go == true ) or ( grafana_all is defined and grafana_all == true )
+
+
+- name: Install Pip Modules
+  import_tasks: install-pip.yml
+  tags: install, delete
+  when: ( pip is defined and pip == true ) or ( grafana_all is defined and grafana_all == true )
+
+
+- name: Install Prometheus / PostgreSQL Exporter
+  import_tasks: install-prometheus.yml
+  tags: install, deploy
+  when: (( prometheus is defined and prometheus == true ) or ( grafana_all is defined and grafana_all == true )) and inventory_hostname in groups['workers']
+
+
+- name: Install Grafana and Influx Database Packages
+  import_tasks: install-grafana.yml
+  tags: install, deploy
+  when: (( grafana is defined and grafana == true ) or ( grafana_all is defined and grafana_all == true )) and inventory_hostname in groups['monitors']
+
+
+- name: Enable SSL on Grafana Server Service
+  import_tasks: enable-grafana-ssl.yml
+  tags: install, enable
+  when: (( ssl is defined and ssl == true ) or ( grafana_all is defined and grafana_all == true )) and inventory_hostname in groups['monitors']
+
+
+- name: Unistall Grafana and Influx Database Packages
+  import_tasks: uninstall-grafana.yml
+  tags: uninstall, destroy
+  when: (( grafana is defined and grafana == true ) or ( grafana_all is defined and grafana_all == true )) and inventory_hostname in groups['monitors']
+
+
+- name: Uninstall Prometheus / PostgreSQL Exporter
+  import_tasks: uninstall-prometheus.yml
+  tags: uninstall, destroy
+  when: (( prometheus is defined and prometheus == true ) or ( grafana_all is defined and grafana_all == true )) and inventory_hostname in groups['workers']
+
+
+#  Skip due to duplcated with pgwatch2
+#- name: Uninstall Pip Modules
+#  import_tasks: uninstall-pip.yml
+#  tags: uninstall
+#  when: ( pip is defined and pip == true ) or ( grafana_all is defined and grafana_all == true )
+
+
+- name: Uninstall GO language
+  import_tasks: uninstall-go.yml
+  tags: uninstall, delete
+  when: ( go is defined and go == true ) or ( grafana_all is defined and grafana_all == true )
+
+
+- name: Upgrade Grafana and Prometheus
+  import_tasks: upgrade.yml
+  tags: upgrade
+

@@ -1,0 +1,75 @@
+---
+- name: Check OS ( PGWatch2 )
+  fail: msg="Not a Red Hat based system!"
+  when: ansible_os_family != 'RedHat' or ansible_os_family != 'CentOS' or  ansible_os_family != 'Rocky'
+
+
+- name: Set Facts for Package Name and List and Network Range
+  import_tasks: set-facts.yml
+  tags: install, uninstall, create, delete
+
+
+- name: Install PGWatch2 Packages
+  import_tasks: 01-install-pkgs.yml
+  tags: install
+  when: ( pkgs is defined and pkgs == true ) or ( pgwatch2_all is defined and pgwatch2_all == true )
+
+
+- name: Create PGWatch2 Database and Users
+  import_tasks: 02-create-db.yml
+  tags: create, install
+  when: ( db is defined and db == true ) or ( pgwatch2_all is defined and pgwatch2_all == true )
+
+
+- name: Install Pip3 Modules
+  import_tasks: 03-install-pip.yml
+  tags: install
+  when: ( pip is defined and pip == true ) or ( pgwatch2_all is defined and pgwatch2_all == true )
+
+
+- name: Install PGWatch2 Web Systemd Unit
+  import_tasks: 04-install-pgwatch2-web.yml
+  tags: create, install
+  when: (( web is defined and web == true ) or ( pgwatch2_all is defined and pgwatch2_all == true )) and inventory_hostname in groups['monitors']
+
+
+- name: Install PGWatch2 Daemon Systemd Unit
+  import_tasks: 05-install-pgwatch2-daemon.yml
+  tags: create, install
+  when: (( daemon is defined and daemon == true ) or ( pgwatch2_all is defined and pgwatch2_all == true )) and inventory_hostname in groups['workers']
+
+
+- name: Uninstall PGWatch2 Daemon Systemd Unit
+  import_tasks: 41-uninstall-pgwatch2-daemon.yml
+  tags: uninstall, delete
+  when: (( daemon is defined and daemon == true ) or ( pgwatch2_all is defined and pgwatch2_all == true )) and inventory_hostname in groups['workers']
+
+
+- name: Uninstall PGWatch2 Web Systemd Unit
+  import_tasks: 42-uninstall-pgwatch2-web.yml
+  tags: uninstall, delete
+  when: (( web is defined and web == true ) or ( pgwatch2_all is defined and pgwatch2_all == true )) and inventory_hostname in groups['monitors']
+
+
+- name: Uninstall Pip3 Modules
+  import_tasks: 43-uninstall-pip.yml
+  tags: uninstall, delete
+  when: ( pip is defined and pip == true ) or ( pgwatch2_all is defined and pgwatch2_all == true )
+
+
+- name: Drop PGWatch2 Database and Users
+  import_tasks: 44-drop-db.yml
+  tags: uninstall, delete
+  when: ( db is defined and db == true ) or ( pgwatch2_all is defined and pgwatch2_all == true )
+
+
+- name: Uninstall PGWatch2 Packages
+  import_tasks: 45-uninstall-pkgs.yml
+  tags: uninstall, delete
+  when: ( pkgs is defined and pkgs == true ) or ( pgwatch2_all is defined and pgwatch2_all == true )
+
+
+- name: Upgrade PGWatch2
+  import_tasks: upgrade.yml
+  tags: upgrade
+

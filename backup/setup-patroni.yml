@@ -1,0 +1,23 @@
+---
+- hosts: workers
+  become: yes
+  gather_facts: true
+  vars:
+    print_debug: true
+    config_firewall: true
+    install_dep_pkgs: true
+    install_pip_module: true
+    install_pkgs: true
+    install_etcd: true
+    config_env: true
+    enable_ssl: true
+    config_patroni: true
+    add_users: true
+    stop_patroni_service: true
+    remove_firewall_config: true
+    uninstall_dep_pkgs: true
+    uninstall_pkgs: true
+    remove_env_config: true
+    uninstall_pip_module: true
+  roles:
+    - patroni

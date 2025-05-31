@@ -1,0 +1,33 @@
+[all:vars]
+ssh_key_filename="id_rsa"
+remote_machine_username="jomoon"
+remote_machine_password="changeme"
+interpreter_python="/usr/bin/python3"
+
+# For patroni cluster
+[master]
+co7-master ansible_ssh_host=192.168.0.61
+
+[slave]
+co7-slave ansible_ssh_host=192.168.0.62
+
+[workers]
+co7-node01 ansible_ssh_host=192.168.0.63
+co7-node02 ansible_ssh_host=192.168.0.64
+co7-node03 ansible_ssh_host=192.168.0.65
+
+# For autofailover
+#[monitor]
+#co7-master ansible_ssh_host=192.168.0.61
+
+#[primary]
+#co7-node01 ansible_ssh_host=192.168.0.63
+
+#[secondary]
+#co7-node02 ansible_ssh_host=192.168.0.64
+#co7-node03 ansible_ssh_host=192.168.0.65
+
+#[workers]
+#co7-node01 ansible_ssh_host=192.168.0.63
+#co7-node02 ansible_ssh_host=192.168.0.64
+#co7-node03 ansible_ssh_host=192.168.0.65

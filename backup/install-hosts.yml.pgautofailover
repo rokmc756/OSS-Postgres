@@ -1,0 +1,14 @@
+---
+- hosts: all
+  become: yes
+  vars:
+    print_debug: true
+    disable_firwall: true
+    install_dep_pkgs: true
+    deploy_monitor: true
+    deploy_workers: true
+    add_users: true
+    enable_ssl: true
+  roles:
+    - init-hosts
+    - pgautofailover

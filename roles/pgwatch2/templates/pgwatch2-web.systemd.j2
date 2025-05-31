@@ -1,0 +1,25 @@
+# This is an example of a systemD config file for pgwatch2-web.
+# You can copy it to "/etc/systemd/system/pgwatch2-web.service", adjust as necessary and then call
+# systemctl daemon-reload && systemctl start pgwatch2-web && systemctl enable pgwatch2-web
+# to start and also enable auto-start after reboot.
+
+[Unit]
+Description=PgWatch2 Web UI
+After=network-online.target
+# If you're using the config DB approach and when on the same machine then it's a good idea to launch after Postgres
+#After=postgresql@12-main.service
+
+[Service]
+Environment="PW2_WEBPORT=8080"
+Environment="PW2_PGHOST=localhost"
+Environment="PW2_DATASTORE=postgres"
+Environment="PW2_PG_METRIC_STORE_CONN_STR=postgresql://pgwatch2@localhost:5432/pgwatch2_metrics"
+
+Type=simple
+User=root
+WorkingDirectory=/etc/pgwatch2/webpy
+ExecStart=/usr/bin/python3 /etc/pgwatch2/webpy/web.py
+TimeoutStartSec=0
+
+[Install]
+WantedBy=multi-user.target

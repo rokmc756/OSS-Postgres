@@ -1,0 +1,25 @@
+bycardo:
+	@if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+		if [ -z ${c} ];  then\
+			ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-bycardo.yml -e '{"${s}": True}' --tags='${r}';\
+		elif [ ! -z ${c} ];  then\
+			if [ "${c}" = "all" ]; then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-bycardo.yml -e '{"${s}": True}' -e '{bycardo_all: True}' --tags='${r}';\
+			elif [ "${c}" != "all" ]; then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-bycardo.yml -e '{"${s}": True}' -e '{"${c}": True}' --tags='${r}';\
+			else\
+				echo "No actions to ${r} bycardo";\
+			fi;\
+		else\
+			echo "No actions to ${r} bycardo";\
+		fi;\
+	elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+		if [ -z ${c} ];  then\
+			ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-bycardo.yml -e '{bycardo_all: True}' --tags='${r}';\
+		else\
+			echo "No actions to ${r} bycardo";\
+		fi;\
+	else\
+		echo "No actions to ${r} bycardo";\
+	fi
+

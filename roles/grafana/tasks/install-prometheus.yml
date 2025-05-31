@@ -1,0 +1,83 @@
+---
+- name: Install Dependent and Prometheus RPM Packages
+  yum:
+    name: "{{ item }}"
+    state: present
+    # skip_broken: yes
+  async: 120
+  poll: 5
+  with_items:
+    - epel-release
+    - python3
+    - python3-pip
+    - postgresql-contrib
+    - postgresql-devel
+
+
+- name: Check the Prometheus and Postgres Exporter Tar Files Already Exists
+  stat: path={{ pgsql.base_path }}/{{ item }}
+  register: check_tar_files
+  with_items:
+    - prometheus-{{ _prometheus.major_version }}.{{ _prometheus.minor_version }}.{{ _prometheus.patch_version }}.linux-amd64.tar.gz
+    - postgres_exporter-{{ _postgres_exporter.major_version }}.{{ _postgres_exporter.minor_version }}.{{ _postgres_exporter.patch_version }}.linux-amd64.tar.gz
+
+
+- name: Check the Prometheus and Postgres Exporter Binary Files
+  stat: path=/usr/local/bin/{{ item }}
+  register: check_bin_files
+  with_items:
+    - prometheus
+    - postgres_exporter
+
+
+- name: Copy the Prometheus and Postgres Exporter Tar Files
+  copy: src={{ item }} dest={{ pgsql.base_path }}/{{ item }} mode=0644 owner=root group=root
+  register: copy_tar_files
+  with_items:
+    - prometheus-{{ _prometheus.major_version }}.{{ _prometheus.minor_version }}.{{ _prometheus.patch_version }}.linux-amd64.tar.gz
+    - postgres_exporter-{{ _postgres_exporter.major_version }}.{{ _postgres_exporter.minor_version }}.{{ _postgres_exporter.patch_version }}.linux-amd64.tar.gz
+  when: not ( check_tar_files.results | map( attribute='stat.exists') ) is all
+
+
+- name: Untar the Prometheus and Postgres Exporter Tar Files
+  shell: tar -C {{ pgsql.base_path }} -xf {{ pgsql.base_path }}/{{ item }}
+  args:
+    executable: /bin/bash
+  with_items:
+    - prometheus-{{ _prometheus.major_version }}.{{ _prometheus.minor_version }}.{{ _prometheus.patch_version }}.linux-amd64.tar.gz
+    - postgres_exporter-{{ _postgres_exporter.major_version }}.{{ _postgres_exporter.minor_version }}.{{ _postgres_exporter.patch_version }}.linux-amd64.tar.gz
+  when: not ( check_bin_files.results | map( attribute='stat.exists') ) is all
+
+
+- name: Copy Binary of the Prometheus and Postgres Exporter into /usr/local/bin Directory
+  shell: cp -f {{ pgsql.base_path }}/{{ item.src }} /usr/local/bin/{{ item.dest }}
+  args:
+    executable: /bin/bash
+  with_items:
+    - { src: "prometheus-{{ _prometheus.major_version }}.{{ _prometheus.minor_version }}.{{ _prometheus.patch_version }}.linux-amd64/prometheus",                                     dest: "prometheus" }
+    - { src: "postgres_exporter-{{ _postgres_exporter.major_version }}.{{ _postgres_exporter.minor_version }}.{{ _postgres_exporter.patch_version }}.linux-amd64/postgres_exporter",  dest: "postgres_exporter" }
+  when: not ( check_bin_files.results | map( attribute='stat.exists') ) is all
+
+
+- name: Copy the Grafana and Prometheus and Postgres Exporter Systemd File
+  template: src={{ item.src }} dest={{ item.dest }} owner=root group=root mode=644 force=yes
+  register: copy_systemd_file
+  with_items:
+    - { src: "prometheus.yml.j2",              dest: "/usr/local/etc/prometheus.yml" }
+    - { src: "postgres_exporter.systemd.j2",   dest: "/etc/systemd/system/postgres_exporter.service" }
+    - { src: "prometheus.systemd.j2",          dest: "/etc/systemd/system/prometheus.service" }
+  when: not ( check_bin_files.results | map( attribute='stat.exists') ) is all
+
+
+- name: Reload and Start Prometheus & Exporter Services
+  systemd:
+    daemon_reexec: true
+    daemon_reload: true
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  register: start_prometheus_services
+  with_items:
+    - postgres_exporter
+    - prometheus
+

@@ -1,0 +1,27 @@
+---
+- name: Create the PGWatch2 Daemon Systemd Unit File
+  template: src={{ item.src }} dest={{ item.dest }} owner={{ item.owner }} group={{ item.group }} mode=644 force=yes
+  register: create_etcd_config
+  with_items:
+    - { src: 'pgwatch2-daemon.systemd.j2', dest: '/etc/systemd/system/pgwatch2-daemon.service', owner: 'root', group: 'root' }
+
+
+- name: Create the PGWatch2 Instances YAML File
+  template: src={{ item.src }} dest={{ item.dest }} owner={{ item.owner }} group={{ item.group }} mode=644 force=yes
+  register: create_pgwatch2_instacnes_file
+  with_items:
+    - { src: 'instances.yaml.j2', dest: '/etc/pgwatch2/config/instances.yaml', owner: 'root', group: 'root' }
+
+
+- name: Reload and Start PGWatch2 Daemon Services
+  become: true
+  systemd:
+    daemon_reexec: true
+    daemon_reload: true
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  register: start_systemd
+  with_items:
+    - pgwatch2-daemon
+

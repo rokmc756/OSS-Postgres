@@ -1,0 +1,9 @@
+---
+- hosts: all
+  become: yes
+  vars:
+    print_debug: true
+    install_dep_packages: false
+    remove_dep_packages: false
+  roles:
+    - pgautofailover

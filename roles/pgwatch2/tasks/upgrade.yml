@@ -1,0 +1,2 @@
+---
+- debug: msg={{ "Fill in upgrade playbook for pgwatch2" }}

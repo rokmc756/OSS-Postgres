@@ -1,0 +1,19 @@
+pgbouncer:
+  - users:
+    - name: testuser
+      pass: changeme
+    - name: postgres
+      pass: changeme
+  - databases:
+    - name: "db1"
+      host: "{{ hostvars[groups['master'][0]][_netdev]['ipv4']['address'] }}"
+      port: 5432
+  - max_client_conn: 300
+  - max_db_connections: 300
+  - max_user_connections: 300
+  - default_pool_size: 80
+  # govern how many backend connections
+
+monit_protection: true
+collectd_monitoring: true
+

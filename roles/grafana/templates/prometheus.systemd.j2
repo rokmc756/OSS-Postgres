@@ -1,0 +1,14 @@
+[Unit]
+Description=Prometheus Server
+After=network.target
+
+[Service]
+Type=simple
+Restart=always
+User=root
+Group=root
+# Environment=DATA_SOURCE_NAME=postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable
+ExecStart=/usr/local/bin/prometheus --config.file=/usr/local/etc/prometheus.yml
+
+[Install]
+WantedBy=multi-user.target
