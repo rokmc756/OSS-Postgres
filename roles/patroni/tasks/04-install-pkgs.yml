@@ -1,51 +1,77 @@
 ---
-- name: Copy the VMware Postgres {{ pgsql.major_version }} RPM Package
-  copy:
-    src: "{{ item }}"
-    dest: "{{ common.sudo_user_home_dir }}/{{ item }}"
-    mode: 0644
-    owner: "{{ common.sudo_user }}"
-    group: "{{ common.sudo_group }}"
-  register: copy_vmware_postgres
-  with_items:
-    - "{{ pgsql_pkg_name }}.{{ pgsql.arch_type }}.{{ pgsql.bin_type }}"
+#- name: Copy the PostgreSQL {{ pgsql.major_version }} RPM Package
+#  copy:
+#    src: "{{ item }}"
+#    dest: "{{ common.sudo_user_home_dir }}/{{ item }}"
+#    mode: 0644
+#    owner: "{{ common.sudo_user }}"
+#    group: "{{ common.sudo_group }}"
+#  register: copy_vmware_postgres
+#  with_items:
+#    - "{{ pgsql_pkg_name }}.{{ pgsql.arch_type }}.{{ pgsql.bin_type }}"
+#
+#
+#- name: Copy the PostgreSQL Patroni RPM Package
+#  copy:
+#    src: "{{ item }}"
+#    dest: "{{ common.sudo_user_home_dir }}/{{ item }}"
+#    mode: 0644
+#    owner: "{{ common.sudo_user }}"
+#    group: "{{ common.sudo_group }}"
+#  register: copy_patroni_rpm_package
+#  with_items:
+#    - "{{ patroni_pkg_name }}-{{ _patroni.build_version }}.{{ _patroni.os_version }}.{{ _patroni.arch_type }}.{{ _patroni.bin_type }}"
+#  when: _patroni.with_pkgs
+#
+#
+#- name: Install the PostgreSQL {{ pgsql.major_version }} RPM Package
+#  yum:
+#    name: "{{ common.sudo_user_home_dir }}/{{ item }}"
+#    state: present
+#    disable_gpg_check: yes
+#  async: 60
+#  poll: 5
+#  register: install_vmware_postgres_rpm_package
+#  with_items:
+#    - "{{ pgsql_pkg_name }}.{{ pgsql.arch_type }}.{{ pgsql.bin_type }}"
+#
+#
+#- name: Install the PostgreSQL Patroni RPM Package
+#  yum:
+#    name: "{{ pgsql.sudo_user_dir }}/{{ item }}"
+#    state: present
+#    disable_gpg_check: yes
+#  async: 60
+#  poll: 5
+#  register: install_paroni_rpm_package
+#  with_items:
+#    - "{{ patroni_pkg_name }}-{{ _patroni.build_version }}.{{ _patroni.os_version }}.{{ _patroni.arch_type }}.{{ _patroni.bin_type }}"
+#  when: _patroni.with_pkgs
+
+#- name: Ensure PostgreSQL Repository
+#  yum_repository:
+#    name: "{{ postgres_repo_name }}"
+#    description: PostgreSQL repository
+#    baseurl: "{{ postgres_repo }}"
+#  # when: repmgr_install_postgresql|bool
 
 
-- name: Copy the VMware Postgres Patroni RPM Package
-  copy:
-    src: "{{ item }}"
-    dest: "{{ common.sudo_user_home_dir }}/{{ item }}"
-    mode: 0644
-    owner: "{{ common.sudo_user }}"
-    group: "{{ common.sudo_group }}"
-  register: copy_patroni_rpm_package
-  with_items:
-    - "{{ patroni_pkg_name }}-{{ _patroni.build_version }}.{{ _patroni.os_version }}.{{ _patroni.arch_type }}.{{ _patroni.bin_type }}"
-  when: _patroni.with_pkgs
+#- name: Download and Install GPG Key
+#  rpm_key:
+#    state: present
+#    key: https://ftp.postgresql.org/pub/repos/yum/keys/PGDG-RPM-GPG-KEY-RHEL
+#  # when: repmgr_install_postgresql|bool
+#  # key: https://download.postgresql.org/pub/repos/yum/keys/RPM-GPG-KEY-PGDG
 
 
-- name: Install the VMware Postgres {{ pgsql.major_version }} RPM Package
+- name: Install PostgreSQL Packages
   yum:
-    name: "{{ common.sudo_user_home_dir }}/{{ item }}"
+    name: "{{ postgresql_server_package }}"
     state: present
-    disable_gpg_check: yes
-  async: 60
-  poll: 5
-  register: install_vmware_postgres_rpm_package
-  with_items:
-    - "{{ pgsql_pkg_name }}.{{ pgsql.arch_type }}.{{ pgsql.bin_type }}"
 
 
-- name: Install the VMware Postgres Patroni RPM Package
+- name: Install Patroni Packages
   yum:
-    name: "{{ pgsql.sudo_user_dir }}/{{ item }}"
+    name: patroni
     state: present
-    disable_gpg_check: yes
-  async: 60
-  poll: 5
-  register: install_paroni_rpm_package
-  with_items:
-    - "{{ patroni_pkg_name }}-{{ _patroni.build_version }}.{{ _patroni.os_version }}.{{ _patroni.arch_type }}.{{ _patroni.bin_type }}"
-  when: _patroni.with_pkgs
-
 

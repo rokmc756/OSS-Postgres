@@ -54,7 +54,7 @@
   when: ( ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky" ) and ansible_distribution_major_version|int >= 9
 
 
-- name: Define Package Names for VMware Postgres/Patroni/ETCD
+- name: Define Package Names for Patroni/ETCD
   set_fact:
     pgsql_pkg_name: "{{ common.pgsql_pkg_name }}-{{ pgsql.major_version }}.{{ pgsql.minor_version }}-{{ pgsql.patch_version }}.{{ pgsql.os_version }}"
     patroni_pkg_name: "{{ common.pgsql_pkg_name }}-patroni-{{ _patroni.major_version }}.{{ _patroni.minor_version }}.{{ _patroni.patch_version }}"

@@ -1,5 +1,5 @@
 ---
-- name: Stop Services for VMware Postgres Patroni and ETCD
+- name: Stop Services for Patroni and ETCD
   systemd:
     name: "{{ item }}"
     state: stopped

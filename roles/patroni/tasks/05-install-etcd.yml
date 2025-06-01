@@ -13,7 +13,7 @@
 
 
 - name: Install ETCD RPM Package and Prerequistes RPMS of Patroni RPM Package
-  yum:
+  package:
     name: "{{ item }}"
     state: present
     skip_broken: yes
@@ -22,12 +22,12 @@
   register: install_etcd_prereq_rpm_packages
   with_items:
     - python-psycopg2
-    - etcd
-  when: hostvars[inventory_hostname].ansible_distribution_major_version|int == 7
+    - patroni-etcd
+  when: hostvars[inventory_hostname].ansible_distribution_major_version|int >= 7
 
 
 - name: Install ETCD RPM Package for Worker nodes
-  yum:
+  package:
     name: "{{ common.sudo_user_home_dir }}/{{ item }}"
     state: present
     disable_gpg_check: yes

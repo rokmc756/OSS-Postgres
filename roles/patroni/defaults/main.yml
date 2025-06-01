@@ -52,3 +52,33 @@ rh8_pip3_module:
 rh9_pip3_module:
   - "patroni==3.0.4"
 
+
+# Versions
+postgres_release: 17
+
+# OS User
+postgres_user: postgres
+postgres_group: postgres
+
+# Packages
+postgresql_server_package: "postgresql{{ postgres_release }}-server"
+
+# Services
+postgres_service: "postgresql-{{ postgres_release }}"
+
+# Postgres Vars
+postgres_admin_user: 'postgres'
+postgres_admin_user_group: 'postgres'
+postgres_ssh_dir: '/var/lib/pgsql/.ssh'
+postgres_ssh_rsa_key: "{{ postgres_ssh_dir }}/id_rsa"
+
+# Postgres Vars
+postgres_data_directory: "/var/lib/pgsql/{{ postgres_release }}/data"
+postgres_conf_directory: "/etc/postgresql/{{ postgres_release }}/data"
+
+# Postgresql Repository
+# postgres_repo_name: "postgres_{{ postgres_release }}"
+# postgres_repo: "https://ftp.postgresql.org/pub/repos/yum/{{ postgres_release }}/redhat/rhel-{{ ansible_distribution_major_version }}-{{ ansible_architecture }}"
+# postgres_repo: "https://download.postgresql.org/pub/repos/yum/{{ postgres_release }}/redhat/rhel-{{ ansible_distribution_major_version }}-{{ ansible_architecture }}"
+
+

@@ -90,3 +90,8 @@ $ make upgrade
 
 ## Reference
 - https://www.dbi-services.com/blog/using-ansible-to-bring-up-a-three-node-patroni-cluster-in-minutes/
+- https://opensource-db.com/step-by-step-guide-to-postgresql-ha-with-patroni-part-i/
+- https://medium.com/@yaseminbsra.sergen/postgresql-with-patroni-high-availability-and-backup-integration-1fd97bffbac1
+- https://download.postgresql.org/pub/repos/yum/17/redhat/rhel-9-x86_64/
+
+

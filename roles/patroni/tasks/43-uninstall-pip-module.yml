@@ -11,10 +11,10 @@
   when: hostvars[inventory_hostname].ansible_distribution_major_version|int >= 8
 
 
-- name: Uninstall Pip3 Modules for Higher Versions than VMware Postgres {{ pgsql.major_version }}
+- name: Uninstall Pip3 Modules for Higher Versions than PostgreSQL {{ pgsql.major_version }}
   shell: |
     pip3 uninstall {{ item.pip3_name }} -y
-  register: uninstall_extra_pip3_modules_for_higher_than_vmware_postgres14
+  register: uninstall_extra_pip3_modules_for_higher_than_postgres14
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
   ignore_errors: true
@@ -22,10 +22,10 @@
   when: pgsql.major_version|int >= 14
 
 
-- name: Uninstall Pip3 Modules for Ealier Versions than VMware Postgres {{ pgsql.major_version }}
+- name: Uninstall Pip3 Modules for Ealier Versions than PostgreSQL {{ pgsql.major_version }}
   shell: |
     pip3 uninstall {{ item.pip3_name }} -y
-  register: uninstall_extra_pip3_modules_for_earlier_than_vmware_postgres13
+  register: uninstall_extra_pip3_modules_for_earlier_than_postgres13
   ignore_errors: true
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"

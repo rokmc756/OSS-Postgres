@@ -1,16 +1,15 @@
-## What is VMware-Postgres Ansible Playbook?
-It is ansible playbook to deploy VMware Postgres conveniently on Baremetal, Virtual Machines and Cloud Infrastructure.
+## What is OSS-Postgres Ansible Playbook?
+It is ansible playbook to deploy OSS Postgres conveniently on Baremetal, Virtual Machines and Cloud Infrastructure.
 It provide also pgwatch2 and grafana for monitoring features as well as SSL connection automatically when deploying it.
-The main purpose of this project is actually very simple. Because there are many jobs to install different kind of VMware Postgres versions and reproduce issues & test features as a support
+The main purpose of this project is actually very simple. Because there are many jobs to install different kind of OSS Postgres versions and reproduce issues & test features as a support
 engineer. I just want to spend less time for it.
 
-If you are working with VMware Postgrs such as Developer, Administrator, Field Engineer or Database Administrator you could also utilize it very conviently as saving time.
+If you are working with OSS Postgrs such as Developer, Administrator, Field Engineer or Database Administrator you could also utilize it very conviently as saving time.
 ## Where is this ansible playbook from and how is it changed?
 
 It's originated by itself.
-## Supported VMware Postgres versions
-* Pivotal Postgres 10.x, 11.x
-* VMware Postgres 10.x, 11.x, 12.x, 13,x, 14.x, 15.x
+## Supported OSS Postgres versions
+* OSS Postgres 17.x
 ## Supported Platform and OS
 * Virtual Machines
 * Baremetal
@@ -32,20 +31,20 @@ $ sudo yum install -y python3-netaddr
 ```
 ## Prepareing OS
 * Configure Yum / Local & EPEL Repostiory
-## Download / configure / run VMware Postgres
+## Download / configure / run OSS Postgres
 ```yaml
-$ git clone https://github.com/rokmc756/VMware-Postgres
-$ cd VMware-Postgres
+$ git clone https://github.com/rokmc756/OSS-Postgres
+$ cd OSS-Postgres
 $ vi Makefile
 ~~ snip
 ANSIBLE_HOST_PASS="changeme"    # It should be changed with password of user in ansible host that vmware-postgres would be run.
 ANSIBLE_TARGET_PASS="changeme"  # It should be changed with password of sudo user in managed nodes that vmware-postgres would be installed.
 ~~ snip
 ```
-## For Single VMware Postgres
-#### 1) The Architecure of Single VMware Postgres with pgwatch2 and grafana
+## For Single OSS Postgres
+#### 1) The Architecure of Single OSS Postgres with pgwatch2 and grafana
 ![alt text](https://github.com/rokmc756/vmware-postgres/blob/main/roles/pgwatch2/images/pgwatch2_architecture.png)
-#### 2) Configure Inventory for Single VMware Postgres
+#### 2) Configure Inventory for Single OSS Postgres
 ```yaml
 $ vi ansible-hosts-rk9-single
 [all:vars]
@@ -64,7 +63,7 @@ rk9-node03 ansible_ssh_host=192.168.2.193
 rk9-node04 ansible_ssh_host=192.168.2.194
 rk9-node05 ansible_ssh_host=192.168.2.195
 ```
-#### 3) Configure variables for Single VMware Postgres
+#### 3) Configure variables for Single OSS Postgres
 ```yaml
 $ vi roles/single/vars/main.yml
 ---
@@ -74,14 +73,14 @@ _ssl:
   ssl_country: "KR"
   ssl_state: "Seoul"
   ssl_location: "Guro"
-  ssl_organization: "VMware"
+  ssl_organization: "OSS"
   ssl_organization_unit: "Tanzu"
   ssl_common_name: "jtest.pivotal.io"
   ssl_email: "jomoon@pivotal.io"
   enable: true
 ~~ snip
 ```
-#### 4) Deploy Single VMware Postgres
+#### 4) Deploy Single OSS Postgres
 ```yaml
 $ dnf versionlock openssl-*                   # For openssl-3.0.7-27 in Rocky 9.x
 $ make single r=disable s=security
@@ -119,7 +118,7 @@ $ make grafana r=install s=all
 - Open https://rk9-node01:3000 for Grafana
 - Open http://rk9-node01:8086 for InfluxDB
 
-#### 7) Destroy PGWatch2/Grafana and Single VMware-Postgres
+#### 7) Destroy PGWatch2/Grafana and Single OSS-Postgres
 ```yaml
 $ make single r=stop s=service
 $ make single r=uninstall s=pkgs
@@ -162,7 +161,7 @@ _ssl:
   ssl_country: "KR"
   ssl_state: "Seoul"
   ssl_location: "Guro"
-  ssl_organization: "VMware"
+  ssl_organization: "OSS"
   ssl_organization_unit: "Tanzu"
   ssl_common_name: "jtest.pivotal.io"
   ssl_email: "jomoon@pivotal.io"
@@ -241,7 +240,7 @@ ssh_key_filename="id_rsa"
 remote_machine_username="jomoon"
 remote_machine_password="changeme"
 
-# For VMware Postgres PGAutoFailover
+# For OSS Postgres PGAutoFailover
 [monitor]
 rk9-node01 ansible_ssh_host=192.168.2.191
 
@@ -279,7 +278,7 @@ _ssl:
   ssl_country: "KR"
   ssl_state: "Seoul"
   ssl_location: "Guro"
-  ssl_organization: "VMware"
+  ssl_organization: "OSS"
   ssl_organization_unit: "Tanzu"
   ssl_common_name: "jtest.pivotal.io"
   ssl_email: "jomoon@pivotal.io"
@@ -321,7 +320,7 @@ $ make pgautofailover r=uninstall s=all
 - [O] Need to fix SEGFAULT when enabling SSL for Patroni and PGAutoFailover - https://knowledge.broadcom.com/external/article/382919/master-panics-after-enabling-ssl-on-gree.html
 - [ ] Change CentOS and Rocky Linux Mirror into Local Mirrors in Korea
 - [ ] Add Monitoring Features With PGWatch2 and Grafana for Single Postgres, PGAutofailover and Patroni Cluster
-- [ ] Add Additional Extensions Inlcuded in VMware-Postgres Zip File
+- [ ] Add Additional Extensions Inlcuded in OSS-Postgres Zip File
 - [ ] Add Falut Talerence Feature with Keepalived for PGAutofailover and Patroni Cluster
 - [ ] Add Load Balance Feature with HAProxy for PGAutofailover and Patroni Cluster
 

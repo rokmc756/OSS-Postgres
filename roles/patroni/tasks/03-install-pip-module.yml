@@ -19,7 +19,7 @@
   register: install_pip
 
 
-- name: Install Python Pip Module for VMware Postgres Patroni
+- name: Install Python Pip Module for Patroni
   shell: |
     pip3 install {{ item }}
   async: 180
@@ -40,7 +40,7 @@
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
 
 
-- name: Install Python Pip3 Modules for VMware Postgres {{ pgsql.major_version }} Patroni on Workers
+- name: Install Python Pip3 Modules for {{ pgsql.major_version }} Patroni on Workers
   shell: |
     pip3 install {{ item.pip3_name }}
   async: 60
@@ -52,7 +52,7 @@
   when: pgsql.major_version|int <= 13
 
 
-- name: Install Python Pip3 Modules for Patroni in VMware Postgres {{ pgsql.major_version }} on Workers
+- name: Install Python Pip3 Modules for Patroni in {{ pgsql.major_version }} on Workers
   shell: |
     pip3 install {{ item.pip3_name }}
   async: 60
@@ -64,7 +64,7 @@
   when: pgsql.major_version|int >= 14
 
 
-- name: Install Prerequesties of Python Pip Modules for VMware Postgres Patroni
+- name: Install Prerequesties of Python Pip Modules for Patroni
   shell: |
     pip3 install {{ item }}
   async: 60
@@ -75,7 +75,7 @@
   with_items: "{{ prereq_pip3_module }}"
 
 
-- name: Install Python Pip3 modules for VMware Posgres Patroni
+- name: Install Python Pip3 modules for Patroni
   shell: |
     pip3 install {{ item }}
   async: 60

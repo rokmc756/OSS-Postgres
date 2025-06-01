@@ -52,7 +52,7 @@ common:
   sudo_group: jomoon
   sudo_user_home_dir: "/home/jomoon"
   pgsql_pkg_name: "vmware-postgres{{ pgsql.major_version }}"
-  pgsql_bin_dir: "/opt/vmware/postgres/{{ pgsql.major_version }}/bin"
+  # pgsql_bin_dir: "/opt/vmware/postgres/{{ pgsql.major_version }}/bin"
   # pgsql_pkg_name: pivotal-postgres
 
 

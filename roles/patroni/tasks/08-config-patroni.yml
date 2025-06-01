@@ -1,8 +1,8 @@
 ---
-- name: Insert Executable Binary Path into .bashrc for VMware Postgres {{ pgsql.major_version }}
+- name: Insert Executable Binary Path into .bashrc for PostgreSQL {{ pgsql.major_version }}
   lineinfile:
     path: "{{ item }}"
-    line: "export PATH={{ common.pgsql_bin_dir }}:$PATH"
+    line: "export PATH=/usr/pgsql-{{ postgres_release }}:$PATH"
   with_items:
     - "{{ pgsql.base_dir }}/.bash_profile"
     - "{{ pgsql.home_dir }}/.bashrc"
@@ -110,7 +110,7 @@
   register: change_tmp_dir_permission
 
 
-- name: Reload and Start Systemd Service of VMware Postgres Patroni
+- name: Reload and Start Systemd Service of Patroni
   systemd:
     name: patroni
     enabled: yes
