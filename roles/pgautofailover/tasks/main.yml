@@ -9,6 +9,12 @@
   tags: install, uninstall, enable, disable, deploy, destroy, create, delete, add, stop
 
 
+- name: Enable PGDB Postgres Repository
+  import_tasks: enable-repo.yml
+  tags: enable, install
+  when: ( repo is defined and repo == true ) or ( patroni_all is defined and patroni_all == true )
+
+
 - name: Stop and Diable Firewalld and SELinux
   import_tasks: security/disable-security.yml
   tags: disable, install
@@ -72,6 +78,12 @@
   import_tasks: security/enable-security.yml
   tags: uninstall, destroy, enable
   when: ( security is defined and security == true ) or ( pgautofailover_all is defined and pgautofailover_all == true )
+
+
+- name: Disable PGDB Postgres Repository
+  import_tasks: disable-repo.yml
+  tags: disable, install
+  when: ( repo is defined and repo == true ) or ( patroni_all is defined and patroni_all == true )
 
 
 - name: Upgrade PGAutoFailover

@@ -53,7 +53,4 @@
   vars:
     ansible_python_interpreter: "{{ yum_python_version }}"
   when: hostvars[inventory_hostname].ansible_distribution_major_version|int >= 9
-# alternatives --set python /usr/bin/python3
-# update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 3
-# update-alternatives --install /usr/bin/unversioned-python python /usr/bin/python3.9 1
 

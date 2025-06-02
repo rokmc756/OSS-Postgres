@@ -1,4 +1,4 @@
 ---
-# Upgrade VMware Postgres PGAutoFailover
+# Upgrade PostgreSQL PGAutoFailover
 - debug: msg={{ "Let's Upgrade pgautofailvoer" }}
 

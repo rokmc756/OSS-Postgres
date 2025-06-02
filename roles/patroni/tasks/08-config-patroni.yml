@@ -2,7 +2,7 @@
 - name: Insert Executable Binary Path into .bashrc for PostgreSQL {{ pgsql.major_version }}
   lineinfile:
     path: "{{ item }}"
-    line: "export PATH=/usr/pgsql-{{ postgres_release }}:$PATH"
+    line: "export PATH=/usr/pgsql-{{ pgsql.major_version }}:$PATH"
   with_items:
     - "{{ pgsql.base_dir }}/.bash_profile"
     - "{{ pgsql.home_dir }}/.bashrc"

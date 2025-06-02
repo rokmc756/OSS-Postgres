@@ -1,31 +1,31 @@
 ---
-- name: Verify that pg_autocatl of VMware Postgres PGAutoFailover has been Properly Installed
+- name: Verify that pg_autocatl of PostgreSQL PGAutoFailover has been Properly Installed
   become_user: postgres
   shell: |
     source {{ pgsql.base_dir }}/.bash_profile
-    {{ common.pgsql_bin_dir }}/pg_autoctl version
+    /usr/pgsql-{{ pgsql.major_version }}/bin/pg_autoctl version
   register: verify_pg_autoctl_installed
   args:
     chdir: "{{ pgsql.base_dir }}"
     executable: /bin/bash
 
 
-- name: Verify that pg_ctl of VMware Postgres PGAutoFailover has been Properly Installed
+- name: Verify that pg_ctl of PostgreSQL PGAutoFailover has been Properly Installed
   become_user: postgres
   shell: |
     source {{ pgsql.base_dir }}/.bash_profile
-    {{ common.pgsql_bin_dir }}/pg_ctl -V
+    /usr/pgsql-{{ pgsql.major_version }}/bin/pg_ctl -V
   register: verify_pg_ctl_installed
   args:
     chdir: "{{ pgsql.base_dir }}"
     executable: /bin/bash
 
 
-- name: Insert Executable Binary Path into .bashrc for VMware Postgres {{ pgsql.major_version }}
+- name: Insert Executable Binary Path into .bashrc for PostgreSQL {{ pgsql.major_version }}
   become_user: postgres
   lineinfile:
     path: "{{ item }}"
-    line: "export PATH={{ common.pgsql_bin_dir }}:$PATH"
+    line: "export PATH=/usr/pgsql-{{ pgsql.major_version }}/bin:$PATH"
   with_items:
     - "{{ pgsql.base_dir }}/.bash_profile"
     - "{{ pgsql.home_dir }}/.bashrc"
@@ -36,7 +36,8 @@
   become_user: postgres
   shell: |
     source {{ pgsql.base_dir }}/.bash_profile
-    {{ common.pgsql_bin_dir }}/pg_autoctl create monitor --auth trust --ssl-self-signed --pgdata {{ pgsql.base_dir }}/{{ _pgfailover.monitor_database }}
+    /usr/pgsql-{{ pgsql.major_version }}/bin/pg_autoctl create monitor --auth trust --ssl-self-signed \
+    --pgdata {{ pgsql.base_dir }}/{{ pgsql.major_version }}/{{ _pgfailover.monitor_database }} --pgctl /usr/pgsql-{{ pgsql.major_version }}/bin/pg_ctl
   async: 300
   poll: 5
   register: create_monitor_node
@@ -48,7 +49,7 @@
 - name: Grant User Access from Network {{ pgsql_network_range }} Access for Access with Cert Authentication
   become_user: postgres
   postgresql_pg_hba:
-    dest: "{{ pgsql.base_dir }}/{{ _pgfailover.monitor_database }}/pg_hba.conf"
+    dest: "{{ pgsql.base_dir }}/{{ pgsql.major_version }}/{{ _pgfailover.monitor_database }}/pg_hba.conf"
     contype: host
     users: all
     source: "{{ pgsql_network_range }}"
@@ -59,8 +60,8 @@
 - name: Create Systemd Service File of Monitor Instance
   become_user: postgres
   shell: |
-    source /var/lib/pgsql/.bash_profile
-    {{ common.pgsql_bin_dir }}/pg_autoctl -q show systemd --pgdata {{ pgsql.base_dir }}/{{ _pgfailover.monitor_database }} > {{ pgsql.base_dir }}/pgautofailover.service
+    source {{ pgsql.base_dir }}/.bash_profile
+    /usr/pgsql-{{ pgsql.major_version }}/bin/pg_autoctl -q show systemd --pgdata {{ pgsql.base_dir }}/{{ pgsql.major_version }}/{{ _pgfailover.monitor_database }} > {{ pgsql.base_dir }}/{{ pgsql.major_version }}/pgautofailover.service
   register: create_systemd_service
   async: 180
   poll: 5
@@ -71,7 +72,7 @@
 
 - name: Copy Systemd Service File of Monitor Instance
   copy:
-    src: "{{ pgsql.base_dir }}/pgautofailover.service"
+    src: "{{ pgsql.base_dir }}/{{ pgsql.major_version }}/pgautofailover.service"
     dest: /etc/systemd/system/
     owner: root
     group: root
@@ -93,7 +94,7 @@
   replace:
     path: "{{ pgsql.base_dir }}/.bash_profile"
     regexp: '^(.*)PGDATA=(.*)$'
-    replace: 'PGDATA=/{{ pgsql.base_dir }}/{{ _pgfailover.workers_database }}'
+    replace: 'PGDATA=/{{ pgsql.base_dir }}/{{ pgsql.major_version }}/{{ _pgfailover.workers_database }}'
     backup: yes
 
 
@@ -108,7 +109,7 @@
   become_user: postgres
   shell: |
     source {{ pgsql.base_dir }}/.bash_profile
-    {{ common.pgsql_bin_dir }}/psql -c "\l"
+    /usr/pgsql-{{ pgsql.major_version }}/bin/psql -c "\l"
   register: verify_monitor_state
   args:
     chdir: "{{ pgsql.base_dir }}"

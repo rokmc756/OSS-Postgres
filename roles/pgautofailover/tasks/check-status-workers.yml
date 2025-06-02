@@ -2,11 +2,11 @@
 - name: Verify the State of Worker Instances
   become_user: postgres
   shell: |
-    source /var/lib/pgsql/.bash_profile
-    {{ common.pgsql_bin_dir }}/pg_autoctl show state
+    source {{ pgsql.base_dir }}/.bash_profile
+    /usr/pgsql-{{ pgsql.major_version }}/bin/pg_autoctl show state
   register: verify_workers_instance_state
   args:
-    chdir: "/var/lib/pgsql"
+    chdir: "{{ pgsql.base_dir }}"
     executable: /bin/bash
   when: inventory_hostname in groups['workers']
 

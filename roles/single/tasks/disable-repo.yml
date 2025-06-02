@@ -1,0 +1,26 @@
+---
+- name: Uninstall EPEL Package Repository
+  package:
+    name: epel-release
+    state: absent
+  register: uninstall_epel_pkg_repo
+- debug: msg={{ uninstall_epel_pkg_repo }}
+  when: print_debug == true
+
+
+- name: Disable
+  package:
+    name: pgdg-redhat-repo-latest
+    state: absent
+  register: disable_pgdb_pgsql_repo
+- debug: msg={{ disable_pgdb_pgsql_repo }}
+  when: print_debug == true
+
+
+- name: Update Caches for DNF Packages
+  shell: |
+    dnf makecache -y
+  register: update_dnf_cache
+- debug: msg={{ update_dnf_cache }}
+  when: print_debug == true
+

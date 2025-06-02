@@ -13,7 +13,7 @@
     - "/var/lib/pgsql/etcd.yml"
     - "/var/lib/pgsql/etcd_logfile"
     - "/var/lib/pgsql/.bash_profile"
-    - "/var/lib/pgsql/{{ postgres_release }}"
+    - "/var/lib/pgsql/{{ pgsql.major_version }}"
     - "/etc/etcd/etcd.conf"
     - "/usr/bin/etcd"
     - "/usr/bin/etcdctl"

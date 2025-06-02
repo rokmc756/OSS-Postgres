@@ -107,7 +107,7 @@
 
 - name: Disable PGDB Postgres Repository
   import_tasks: disable-repo.yml
-  tags: disable, install
+  tags: disable, uninstall
   when: ( repo is defined and repo == true ) or ( patroni_all is defined and patroni_all == true )
 
 

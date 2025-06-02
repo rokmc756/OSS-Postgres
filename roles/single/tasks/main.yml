@@ -9,6 +9,12 @@
   tags: install, uninstall, init, enable, disable, config, stop, add
 
 
+- name: Enable PGDB Postgres Repository
+  import_tasks: enable-repo.yml
+  tags: enable, install
+  when: ( repo is defined and repo == true ) or ( single_all is defined and single_all == true )
+
+
 - name: Stop and Diable Firewalld and SELinux
   import_tasks: security/disable-security.yml
   tags: disable, install
@@ -67,6 +73,12 @@
   import_tasks: remove-config-files.yml
   tags: uninstall, remove
   when: ( files is defined and files == true ) or ( single_all is defined and single_all == true )
+
+
+- name: Disable PGDB Postgres Repository
+  import_tasks: disable-repo.yml
+  tags: disable, uninstall
+  when: ( repo is defined and repo == true ) or ( single_all is defined and single_all == true )
 
 
 - name: Upgrade RPM Packages for Single VMware Postgres

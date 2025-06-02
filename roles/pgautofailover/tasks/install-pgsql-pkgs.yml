@@ -7,7 +7,7 @@
   when: ansible_distribution == 'RedHat' or ansible_distribution == 'CentOS' or ansible_distribution == 'Rocky'
 
 
-- name: Install Common Prerequisties RPM Packages for VMware Postgres PGAutoFailover
+- name: Install Common Prerequisties RPM Packages for PostgreSQL PGAutoFailover
   package:
     name:  "{{ rh_install_pkgs }}"
     state: present
@@ -16,22 +16,25 @@
   poll: 5
   vars:
     ansible_python_interpreter: "{{ yum_python_version }}"
-  # skip_broken: yes
-  # name:  "{{ item  }}"
-  # async: 120
-  # poll: 5
-  # with_items: "{{ rh_install_pkgs }}"
 
 
-- name: Copy the VMware Postgres RPM Pacage to All Nodes
-  copy: src={{ pgsql_pkg_name }}.{{ pgsql.arch_type }}.{{ pgsql.bin_type }} dest={{ common.sudo_user_home_dir }}/{{ pgsql_pkg_name }}.{{ pgsql.arch_type }}.{{ pgsql.bin_type }} mode=0644 owner=jomoon group=jomoon
-
-
-- name: Install VMware Postgres RPM Packge on All Nodes
-  package:
-    name: "{{ common.sudo_user_home_dir }}/{{ pgsql_pkg_name }}.{{ pgsql.arch_type }}.{{ pgsql.bin_type }}"
+- name: Install PostgreSQL Packages
+  yum:
+    name: "{{ item }}"
     state: present
-    disable_gpg_check: true
   vars:
     ansible_python_interpreter: "{{ yum_python_version }}"
+  with_items:
+    - "postgresql{{ pgsql.major_version }}-server"
+    - "postgresql{{ pgsql.major_version }}"
+    - libpq5
+
+
+- name: Install PGAutoFailover Packages
+  yum:
+    name: pg_auto_failover_{{ pgsql.major_version }}
+    state: present
+  vars:
+    ansible_python_interpreter: "{{ yum_python_version }}"
+
 

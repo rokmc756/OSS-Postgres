@@ -2,9 +2,9 @@
 - name: Enable SSL on Workers
   become_user: postgres
   shell: |
-    source /var/lib/pgsql/.bash_profile
-    {{ common.pgsql_bin_dir }}/pg_autoctl enable ssl --pgdata {{ pgsql.base_dir }}/ha --ssl-ca-file '' --ssl-crl-file '' \
-    --server-key {{ _ssl.ssl_dir }}/server.key --server-cert {{ _ssl.ssl_dir }}/server.crt --ssl-mode prefer
+    source {{ pgsql.base_dir }}/.bash_profile
+    /usr/pgsql-{{ pgsql.major_version }}/bin/pg_autoctl enable ssl --pgdata {{ pgsql.base_dir }}/{{ pgsql.major_version }}/ha --ssl-ca-file '' \
+    --ssl-crl-file '' --server-key {{ _ssl.ssl_dir }}/server.key --server-cert {{ _ssl.ssl_dir }}/server.crt --ssl-mode prefer
   register: enable_ssl_workers
 
 
@@ -13,4 +13,5 @@
   shell: |
     sudo systemctl restart pgautofailover
   register: restart_pgautofailover
+
 

@@ -76,7 +76,7 @@
 - name: Add SSL Configuration File to Authenticate SSL User into VMware Postgres Database Server
   become_user: postgres
   lineinfile:
-    dest: "{{ pgsql.base_dir }}/data/{{ item.file }}"
+    dest: "{{ pgsql.base_dir }}/{{ pgsql.major_version }}/data/{{ item.file }}"
     line: "{{ item.line }}"
     state: "{{ item.state }}"
   with_items:
@@ -93,7 +93,7 @@
 - name: Stop Postgres Instance manually to Apply Systemd Unit
   become_user: postgres
   shell: |
-    /opt/vmware/postgres/{{ pgsql.major_version }}/bin/pg_ctl stop -D {{ pgsql.base_dir }}/data -s -m fast
+    /usr/pgsql-{{ pgsql.major_version }}/bin/pg_ctl stop -D {{ pgsql.base_dir }}/{{ pgsql.major_version }}/data -s -m fast
   register: stop_postgres_instance
 
 

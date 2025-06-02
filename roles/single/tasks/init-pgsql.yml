@@ -3,7 +3,7 @@
   become_user: postgres
   shell: |
     source {{ pgsql.base_dir }}/.bash_profile
-    {{ common.pgsql_bin_dir }}/initdb -D {{ pgsql.base_dir }}/data
+    /usr/pgsql-{{ pgsql.major_version }}/bin/initdb -D {{ pgsql.base_dir }}/{{ pgsql.major_version }}/data
   register: init_postgres_instance
   args:
     chdir: "{{ pgsql.base_dir }}"
@@ -14,7 +14,7 @@
   become_user: postgres
   shell: |
     source {{ pgsql.base_dir }}/.bash_profile
-    {{ common.pgsql_bin_dir }}/postgres -D {{ pgsql.base_dir }}/data > {{ pgsql.base_dir }}/logfile 2>&1 &
+    /usr/pgsql-{{ pgsql.major_version }}/bin/postgres -D {{ pgsql.base_dir }}/{{ pgsql.major_version }}/data > {{ pgsql.base_dir }}/{{ pgsql.major_version }}/logfile 2>&1 &
   register: create_postgres_instance
   args:
     chdir: "{{ pgsql.base_dir }}"
@@ -25,7 +25,7 @@
   become_user: postgres
   shell: |
     source {{ pgsql.base_dir }}/.bash_profile
-    {{ common.pgsql_bin_dir }}/psql -c "select version()"
+    /usr/pgsql-{{ pgsql.major_version }}/bin/psql -c "select version()"
   register: verify_postgres_install
   args:
     chdir: "{{ pgsql.base_dir }}"
@@ -36,18 +36,18 @@
   become_user: postgres
   shell: |
     source {{ pgsql.base_dir }}/.bash_profile
-    {{ common.pgsql_bin_dir }}/pg_ctl -V
+    /usr/pgsql-{{ pgsql.major_version }}/bin/pg_ctl -V
   register: verify_pg_ctl_install
   args:
     chdir: "{{ pgsql.base_dir }}"
     executable: /bin/bash
 
 
-- name: Insert the Line of Executable Binary Path into .bashrc for VMware Postgres {{ pgsql.major_version }}
+- name: Insert the Line of Executable Binary Path into .bashrc for PostgreSQL {{ pgsql.major_version }}
   become_user: postgres
   lineinfile:
     path: "{{ item }}"
-    line: "export PATH={{ common.pgsql_bin_dir }}:$PATH"
+    line: "export PATH=/usr/pgsql-{{ pgsql.major_version }}/bin:$PATH"
   with_items:
     - "{{ pgsql.base_dir }}/.bash_profile"
     - "{{ pgsql.home_dir }}/.bash_profile"
@@ -58,7 +58,7 @@
   vars:
     ansible_python_interpreter: "/usr/bin/python3"
   postgresql_pg_hba:
-    dest: /var/lib/pgsql/data/pg_hba.conf
+    dest: "{{ pgsql.base_dir }}/{{ pgsql.major_version }}/data/pg_hba.conf"
     contype: host
     users: all
     source: "{{ pgsql_network_range }}"
@@ -71,7 +71,7 @@
   replace:
     path: "{{ pgsql.base_dir }}/.bash_profile"
     regexp: '^(.*)PGDATA=(.*)$'
-    replace: 'PGDATA=/{{ pgsql.base_dir }}/data'
+    replace: 'PGDATA=/{{ pgsql.base_dir }}/{{ pgsql.major_version }}/data'
     backup: yes
 
 
@@ -113,7 +113,7 @@
   become_user: postgres
   shell: |
     source {{ pgsql.base_dir }}/.bash_profile
-    {{ common.pgsql_bin_dir }}/psql -c "\l"
+    /usr/pgsql-{{ pgsql.major_version }}/bin/psql -c "\l"
   register: verify_postgres_state
   args:
     chdir: "{{ pgsql.base_dir }}"

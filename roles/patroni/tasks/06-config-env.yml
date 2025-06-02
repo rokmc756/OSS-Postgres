@@ -8,7 +8,7 @@
 
 - name: Check if .bash_profile exits under {{ pgsql.base_dir }} Directory
   become_user: postgres
-  stat: path=/var/lib/pgsql/.bash_profile
+  stat: path={{ pgsql.base_dir }}/.bash_profile
   register: exists_bash_profile
 
 
@@ -23,13 +23,13 @@
     - exists_bash_profile.stat.exists == False
 
 
-- name: Insert Executable Binary Path into .bashrc for PostgreSQL {{ postgres_release }}
+- name: Insert Executable Binary Path into .bashrc for PostgreSQL {{ pgsql.major_version }}
   become_user: postgres
   lineinfile:
     path: "{{ pgsql.base_dir }}/.bash_profile"
-    line: "export PATH=/usr/pgsql-{{ postgres_release }}/bin:$PATH"
+    line: "export PATH=/usr/pgsql-{{ pgsql.major_version }}/bin:$PATH"
   register: add_bin_path_inline
   when:
     - exists_bash_profile.stat.exists == True
-    - hostvars[inventory_hostname].ansible_distribution_major_version|int == 7
+    - hostvars[inventory_hostname].ansible_distribution_major_version|int >= 7
 

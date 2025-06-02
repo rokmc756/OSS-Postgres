@@ -1,9 +1,9 @@
 ---
-- name: Insert Executable Binary Path into .bashrc for VMware Postgres {{ pgsql.major_version }}
+- name: Insert Executable Binary Path into .bashrc for PostgreSQL {{ pgsql.major_version }}
   become_user: postgres
   lineinfile:
     path: "{{ item }}"
-    line: "export PATH={{ common.pgsql_bin_dir }}:$PATH"
+    line: "export PATH=/usr/pgsql-{{ pgsql.major_version }}/bin/:$PATH"
   with_items:
     - "{{ pgsql.base_dir }}/.bash_profile"
     - "{{ pgsql.home_dir }}/.bashrc"
@@ -13,9 +13,10 @@
   become_user: postgres
   shell: |
     source {{ pgsql.base_dir }}/.bash_profile
-    {{ common.pgsql_bin_dir }}/pg_autoctl create postgres --pgdata '{{ pgsql.base_dir }}/{{ _pgfailover.workers_database }}' --auth trust --ssl-self-signed \
-    --username ha-admin --dbname '{{ _pgfailover.app_database }}' --hostname '{{ inventory_hostname }}' --pgctl {{ common.pgsql_bin_dir }}/pg_ctl \
-    --monitor "postgres://autoctl_node@{{ hostvars[groups['monitor'][0]].ansible_hostname }}/pg_auto_failover?sslmode={{ _pgfailover.sslmode }}"
+    /usr/pgsql-{{ pgsql.major_version }}/bin/pg_autoctl create postgres --pgdata '{{ pgsql.base_dir }}/{{ pgsql.major_version }}/{{ _pgfailover.workers_database }}' --auth trust --ssl-self-signed \
+    --username ha-admin --dbname '{{ _pgfailover.app_database }}' --hostname '{{ inventory_hostname }}' \
+    --monitor "postgres://autoctl_node@{{ hostvars[groups['monitor'][0]].ansible_hostname }}/pg_auto_failover?sslmode={{ _pgfailover.sslmode }}" \
+    --pgctl /usr/pgsql-{{ pgsql.major_version }}/bin/pg_ctl
   async: 300
   poll: 5
   register: create_workers_instance
@@ -28,19 +29,18 @@
   become_user: postgres
   shell: |
     source {{ pgsql.base_dir }}/.bash_profile
-    {{ common.pgsql_bin_dir }}/pg_autoctl -q show systemd --pgdata '{{ pgsql.base_dir }}/{{ _pgfailover.workers_database }}' > pgautofailover.service
+    /usr/pgsql-{{ pgsql.major_version }}/bin/pg_autoctl -q show systemd --pgdata '{{ pgsql.base_dir }}/{{ pgsql.major_version }}/{{ _pgfailover.workers_database }}' > pgautofailover.service
   register: add_workers_systemd_service
   async: 180
   poll: 5
   args:
-    chdir: "{{ pgsql.base_dir }}"
+    chdir: "{{ pgsql.base_dir }}/{{ pgsql.major_version }}"
     executable: /bin/bash
-  # {{ common.pgsql_bin_dir }}/pg_autoctl -q show systemd \
 
 
 - name: Copy Primary Systemd Service File of Worker Instances
   copy:
-    src: "{{ pgsql.base_dir }}/pgautofailover.service"
+    src: "{{ pgsql.base_dir }}/{{ pgsql.major_version }}/pgautofailover.service"
     dest: "/etc/systemd/system/"
     owner: root
     group: root
@@ -53,7 +53,7 @@
   replace:
     path: "{{ pgsql.base_dir }}/.bash_profile"
     regexp: '^(.*)PGDATA=(.*)$'
-    replace: 'PGDATA=/{{ pgsql.base_dir }}/{{ _pgfailover.workers_database }}'
+    replace: 'PGDATA={{ pgsql.base_dir }}/{{ pgsql.major_version }}/{{ _pgfailover.workers_database }}'
     backup: yes
 
 
@@ -65,4 +65,5 @@
   register: add_pgautofailover_service
   async: 60
   poll: 5
+
 

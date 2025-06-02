@@ -12,5 +12,6 @@
     - "/var/lib/pgsql/data"
     - "/var/lib/pgsql/wal_archive"
     - "/var/lib/pgsql/pgpass0"
+    - "/var/lib/pgsql/{{ pgsql.major_version }}"
     - "/var/lib/pgsql"
 

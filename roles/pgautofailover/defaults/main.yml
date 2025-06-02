@@ -26,10 +26,5 @@ delete_file_list:
   - "/var/lib/pgsql/monitor"
   - "/var/lib/pgsql/pgautofailover.service"
   - "/var/lib/pgsql/certs"
-
-
-#  - "/var/lib/pgsql/pgautofailover.service"
-# - "/home/postgres/"
-# - "/var/lib/pgsql"
-# - "/var/lib/pgsql/.bash_profile"
+  - "/var/lib/pgsql/{{ pgsql.major_version }}"
 

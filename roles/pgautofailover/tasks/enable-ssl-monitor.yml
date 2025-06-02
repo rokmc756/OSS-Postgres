@@ -2,8 +2,8 @@
 - name: Enable SSL on Monitor
   become_user: postgres
   shell: |
-    source /var/lib/pgsql/.bash_profile
-    {{ common.pgsql_bin_dir }}/pg_autoctl enable ssl --pgdata {{ pgsql.base_dir }}/monitor --ssl-ca-file '' --ssl-crl-file '' \
+    source {{ pgsql.base_dir }}/.bash_profile
+    /usr/pgsql-{{ pgsql.major_version }}/bin/pg_autoctl enable ssl --pgdata {{ pgsql.base_dir }}/{{ pgsql.major_version }}/monitor --ssl-ca-file '' --ssl-crl-file '' \
     --server-key {{ _ssl.ssl_dir }}/server.key --server-cert {{ _ssl.ssl_dir }}/server.crt --ssl-mode prefer
   register: enable_ssl_monitor
 

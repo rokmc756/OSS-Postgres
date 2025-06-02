@@ -54,7 +54,7 @@
   when: ( ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky" ) and ansible_distribution_major_version|int >= 9
 
 
-- name: Define fact of package names for VMware Postgres
+- name: Define fact of package names for PostgreSQL
   set_fact:
     pgsql_pkg_name: "{{ common.pgsql_pkg_name }}-{{ pgsql.major_version }}.{{ pgsql.minor_version }}-{{ pgsql.patch_version }}.{{ pgsql.os_version }}"
 

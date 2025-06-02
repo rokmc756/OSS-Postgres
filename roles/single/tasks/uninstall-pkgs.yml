@@ -1,17 +1,15 @@
 ---
-- name: Uninstall VMware Postgres RPM Package
+- name: Uninstall PostgreSQL RPM Package
   package:
-    name: "{{ pgsql_pkg_name }}"
+    name: "{{ item }}"
     state: absent
     disable_gpg_check: true
   vars:
     ansible_python_interpreter: "{{ yum_python_version }}"
-
-
-- name: Delete VMware Postgres RPM Package File
-  file:
-    path: "{{ common.sudo_user_home_dir }}/{{ pgsql_pkg_name }}.{{ pgsql.arch_type }}.{{ pgsql.bin_type }}"
-    state: absent
+  with_items:
+    - postgresql{{ pgsql.major_version }}-server
+    - postgresql{{ pgsql.major_version }}
+    - libpq5
 
 
 - name: Delete Configuration Files and Data Directory for VMware Postgres

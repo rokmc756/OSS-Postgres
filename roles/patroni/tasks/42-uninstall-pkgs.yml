@@ -28,9 +28,9 @@
   register: delete_postgres_rpm_packages
   ignore_errors: true
   with_items:
-    - postgresql{{ postgres_release }}-server
-    - postgresql{{ postgres_release }}
-    - "{{ pgsql_pkg_name }}"
+    - postgresql{{ pgsql.major_version }}-server
+    - postgresql{{ pgsql.major_version }}
+    - libpq5
   vars:
     ansible_python_interpreter: "{{ yum_python_version }}"
 

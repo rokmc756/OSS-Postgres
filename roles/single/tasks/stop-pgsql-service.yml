@@ -1,7 +1,7 @@
 ---
 - name: Stop PostgreSQL Systemd Service
   systemd:
-    name: postgresql
+    name: postgresql-{{ pgsql.major_version }}
     state: stopped
     daemon_reload: yes
   register: stop_postgresql_service
@@ -24,5 +24,4 @@
   ignore_errors: true
   async: 60
   poll: 5
-
 

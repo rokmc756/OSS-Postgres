@@ -2,9 +2,10 @@
 - name: Disable SSL on Workers
   become_user: postgres
   shell: |
-    export PGDATA=/var/lib/pgsql/ha
-    {{ common.pgsql_bin_dir }}/pg_autoctl disable ssl
+    export PGDATA={{ pgsql.base_dir }}/{{ pgsql.major_version }}/ha
+    /usr/pgsql-{{ pgsql.major_version }}/bin/pg_autoctl disable ssl
   register: enable_ssl_workers
+  ignore_errors: true
 
 
 - name: Restart PGAutoFailover Service to Apply SSL Changes
@@ -12,4 +13,5 @@
   shell: |
     sudo systemctl restart pgautofailover
   register: restart_pgautofailover
+  ignore_errors: true
 
