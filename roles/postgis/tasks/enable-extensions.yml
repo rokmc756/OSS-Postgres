@@ -1,0 +1,58 @@
+---
+- name: Create PostGIS Extension and Enable Raster in a Database
+  become_user: postgres
+  shell: |
+    psql -d {{ pgsql.db_name }} -tAc "CREATE EXTENSION {{ item }};"
+  register: enable_postgis_extensions
+  with_items:
+    - postgis
+    - postgis_topology
+    - postgis_sfcgal
+    - fuzzystrmatch
+    - address_standardizer
+    - address_standardizer_data_us
+    - postgis_tiger_geocoder
+    - postgis_raster
+    - pgrouting
+- debug: msg="{{ enable_postgis_extensions }}"
+# https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.PostgreSQL.CommonDBATasks.PostGIS.html
+# https://www.crunchydata.com/blog/loading-data-into-postgis-an-overview
+# https://www.crunchydata.com/blog/postgis-raster-and-crunchy-bridge
+
+
+- name: Create PostGIS Version
+  become_user: postgres
+  shell: |
+    psql -d {{ pgsql.db_name }} -tAc "SELECT PostGIS_version();"
+  register: check_postgis_version
+- debug: msg="{{ check_postgis_version }}"
+
+
+- name: Check GDAL Driver Status
+  become_user: postgres
+  shell: |
+    psql -d {{ pgsql.db_name }} -tAc "SELECT * FROM st_gdaldrivers();"
+  register: check_gdal_driver_status
+- debug: msg="{{ check_gdal_driver_status }}"
+
+
+- name: Set All GDAL Driver
+  become_user: postgres
+  shell: |
+    psql -d {{ pgsql.db_name }} -tAc "SET postgis.gdal_enabled_drivers = 'ENABLE_ALL'; SELECT short_name FROM st_gdaldrivers();"
+  register: set_all_gdal_driver
+- debug: msg="{{ set_all_gdal_driver }}"
+
+
+- name: Check PGRouting Version
+  become_user: postgres
+  shell: |
+    psql -d {{ pgsql.db_name }} -tAc "SELECT * FROM pgr_version();"
+  register: check_pgrouting_version
+- debug: msg="{{ check_pgrouting_version }}"
+
+
+# 이 set 작업은 postgresql.conf에 지정할 수 있고(reload로 반영 가능), 쉘에서 OS 환경 설정 값으로 지정할 수 있습니다.
+# export POSTGIS_GDAL_ENABLED_DRIVERS=ENABLE_ALL
+
+

@@ -3,7 +3,6 @@ dnf install -y gdal310
 dnf install -y gdal310-devel
 dnf install -y gdal310-java
 dnf install -y gdal310-javadoc
-dnf install -y gdal310-python-tools
 dnf install -y gdal310-python3
 
 
@@ -16,10 +15,22 @@ dnf install -y postgis35_17-llvmjit
 dnf install -y postgis35_17-utils
 
 
+su - postgres
 psql pgsql_testdb
-create extension postgis
+create extension postgis;
+CREATE EXTENSION postgis_topology;
+CREATE EXTENSION postgis_sfcgal;
+CREATE EXTENSION fuzzystrmatch;
+CREATE EXTENSION address_standardizer;
+CREATE EXTENSION address_standardizer_data_us;
+CREATE EXTENSION postgis_tiger_geocoder;
+SELECT PostGIS_version();
 
+CREATE EXTENSION postgis_raster;
+SELECT * FROM st_gdaldrivers();
 
+SET postgis.gdal_enabled_drivers = 'ENABLE_ALL';
+SELECT short_name FROM st_gdaldrivers();
 
 
 

@@ -1,0 +1,18 @@
+---
+- name: Copy Seoul Geogrphic Data File
+  become_user: postgres
+  copy: src=LSMD_CONT_LDREG_Seoul.tar.gz dest=/home/postgres/LSMD_CONT_LDREG_Seoul.tar.gz remote_src=no mode=0644 owner=postgres group=postgres
+
+
+- name: Untar Seoul Geogrphic Data File
+  become_user: postgres
+  unarchive: src=/home/postgres/LSMD_CONT_LDREG_Seoul.tar.gz dest=/home/postgres remote_src=yes owner=postgres group=postgres
+
+
+- name: Setup Seoul Geogrphic Data File
+  become_user: postgres
+  shell: |
+    shp2pgsql -I -s 5179 -W cp949 /home/postgres/LSMD_CONT_LDREG_Seoul/LSMD_CONT_LDREG_11_202505.shp | psql -h {{ _ipaddr }} -U {{ pgsql.db_user }} -d {{ pgsql.db_name }}
+  register: check_pgrouting_version
+- debug: msg="{{ check_pgrouting_version }}"
+

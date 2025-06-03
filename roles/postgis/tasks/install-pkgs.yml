@@ -1,0 +1,26 @@
+---
+- name: Install the PostGIS RPM Package
+  package:
+    name: "{{ item }}"
+    state: present
+    disable_gpg_check: true
+  async: 180
+  poll: 5
+  vars:
+    ansible_python_interpreter: "{{ yum_python_version }}"
+  with_items:
+    - "postgis35_17,postgis35_17-client,postgis35_17-devel,postgis35_17-docs,postgis35_17-gui,postgis35_17-llvmjit,postgis35_17-utils,pgrouting_{{ pgsql.major_version }}"
+
+
+- name: Install the GDAL RPM Package
+  package:
+    name: "{{ item }}"
+    state: present
+    disable_gpg_check: true
+  async: 180
+  poll: 5
+  vars:
+    ansible_python_interpreter: "{{ yum_python_version }}"
+  with_items:
+    - "gdal310,gdal310-devel,gdal310-java,gdal310-javadoc,gdal310-python3"
+

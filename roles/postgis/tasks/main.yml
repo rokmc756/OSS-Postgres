@@ -1,0 +1,44 @@
+---
+- name: Check OS ( PostGIS )
+  fail: msg="Not a Red Hat/CentOS/Rocky or Unbuntu/Debian based system!"
+  when: ansible_distribution != 'RedHat' or ansible_distribution != 'CentOS' or ansible_distribution != 'Rocky' or ansible_distribution != 'Debian' or ansible_distribution != 'Ubuntu'
+
+
+- name: Set Facts for PostGIS
+  import_tasks: set-facts.yml
+  tags: install, uninstall
+
+
+- name: Install PostGIS and GDAL Package
+  import_tasks: install-pkgs.yml
+  tags: setup, install
+  when: (( pkgs is defined and pkgs == true ) or ( postgis_all is defined and postgis_all == true )) and inventory_hostname in groups['primary']
+
+
+- name: Enable PostGIS and GDAL Extension
+  import_tasks: enable-extensions.yml
+  tags: enable, install
+  when: (( ext is defined and ext == true ) or ( postgis_all is defined and postgis_all == true )) and inventory_hostname in groups['primary']
+
+
+- name: Setup Geographic Data
+  import_tasks: setup-seoul-geodata.yml
+  tags: setup, install
+  when: (( geodata is defined and geodata == true ) or ( postgis_all is defined and postgis_all == true )) and inventory_hostname in groups['primary']
+
+
+#- name: Remove a Database of PostGIS
+#  import_tasks: 42-remove-postgis-db.yml
+#  tags: uninstall
+
+
+#- name: Remove PostGIS GPpkg Package
+#  import_tasks: 43-remove-postgis-pkgs.yml
+#  tags: uninstall
+
+
+#- name: Remove PostGIS Config Files and Restart Greenplum Database
+#  import_tasks: 44-remove-postgis-config.yml
+#  tags: uninstall
+
+

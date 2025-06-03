@@ -7,81 +7,83 @@
 - name: Set Facts for Package Name and List and Network Range
   import_tasks: set-facts.yml
   tags: install, uninstall, init, enable, disable, config, stop, add
+  when: inventory_hostname in groups['primary']
 
 
 - name: Enable PGDB Postgres Repository
   import_tasks: enable-repo.yml
   tags: enable, install
-  when: ( repo is defined and repo == true ) or ( single_all is defined and single_all == true )
+  when: (( repo is defined and repo == true ) or ( single_all is defined and single_all == true )) and inventory_hostname in groups['primary']
 
 
 - name: Stop and Diable Firewalld and SELinux
   import_tasks: security/disable-security.yml
   tags: disable, install
-  when: ( security is defined and security == true ) or ( single_all is defined and single_all == true )
+  when: (( security is defined and security == true ) or ( single_all is defined and single_all == true )) and inventory_hostname in groups['primary']
 
 
 - name: Install Common Prerequisties and VMware Postgres RPM Packages
   import_tasks: install-pkgs.yml
   tags: install
-  when: ( pkgs is defined and pkgs == true ) or ( single_all is defined and single_all == true )
+  when: (( pkgs is defined and pkgs == true ) or ( single_all is defined and single_all == true )) and inventory_hostname in groups['primary']
 
 
 - name: Initialize VMware Postgres Instance
   import_tasks: init-pgsql.yml
   tags: init, install
-  when: ( postgres is defined and postgres == true ) or ( single_all is defined and single_all == true )
+  when: (( postgres is defined and postgres == true ) or ( single_all is defined and single_all == true )) and inventory_hostname in groups['primary']
 
 
 - name: Create Database and Users
   import_tasks: add-users.yml
   tags: install, add
-  when: ( user is defined and user == true ) or ( single_all is defined and single_all == true )
+  when: (( user is defined and user == true ) or ( single_all is defined and single_all == true )) and inventory_hostname in groups['primary']
 
 
 - name: Enable SSL for Single VMware Postgres
   import_tasks: enable-ssl.yml
   tags: enable, config, install
-  when: ( ssl is defined and ssl == true ) or ( single_all is defined and single_all == true )
+  when: (( ssl is defined and ssl == true ) or ( single_all is defined and single_all == true )) and inventory_hostname in groups['primary']
 
 
 - name: Check the status of Single VMware Postgres
   import_tasks: check-status.yml
   tags: install
-  when: ( single_all is defined and single_all == true )
+  when: (( single_all is defined and single_all == true )) and inventory_hostname in groups['primary']
 
 
 - name: Stop and Disable PostgreSQL
   import_tasks: stop-pgsql-service.yml
   tags: uninstall, destroy, delete, stop
-  when: ( service is defined and service == true ) or ( single_all is defined and single_all == true )
+  when: (( service is defined and service == true ) or ( single_all is defined and single_all == true )) and inventory_hostname in groups['primary']
 
 
 - name: Uninstall Common Prerequisties and VMware Postgres RPM Packages
   import_tasks: uninstall-pkgs.yml
   tags: uninstall
-  when: ( pkgs is defined and pkgs == true ) or ( single_all is defined and single_all == true )
+  when: (( pkgs is defined and pkgs == true ) or ( single_all is defined and single_all == true )) and inventory_hostname in groups['primary']
 
 
 - name: Enable Firewalld and SELinux
   import_tasks: security/enable-security.yml
   tags: enable, uninstall
-  when: ( security is defined and security == true ) or ( single_all is defined and single_all == true )
+  when: (( security is defined and security == true ) or ( single_all is defined and single_all == true )) and inventory_hostname in groups['primary']
 
 
 - name: Remove config files of environment for Single VMware Postgres
   import_tasks: remove-config-files.yml
   tags: uninstall, remove
-  when: ( files is defined and files == true ) or ( single_all is defined and single_all == true )
+  when: (( files is defined and files == true ) or ( single_all is defined and single_all == true )) and inventory_hostname in groups['primary']
 
 
 - name: Disable PGDB Postgres Repository
   import_tasks: disable-repo.yml
   tags: disable, uninstall
-  when: ( repo is defined and repo == true ) or ( single_all is defined and single_all == true )
+  when: (( repo is defined and repo == true ) or ( single_all is defined and single_all == true )) and inventory_hostname in groups['primary']
 
 
 - name: Upgrade RPM Packages for Single VMware Postgres
   import_tasks: upgrade.yml
   tags: upgrade
+  when: inventory_hostname in groups['primary']
 
