@@ -1,0 +1,41 @@
+---
+- name: Install EPEL Package Repository
+  package:
+    name: epel-release
+    state: present
+  register: install_epel_pkg_repo
+- debug: msg={{ install_epel_pkg_repo }}
+  when: print_debug == true
+
+
+- name: Enable PGDG PostgreSQL Repository
+  package:
+    name: "https://download.postgresql.org/pub/repos/yum/reporpms/EL-9-x86_64/pgdg-redhat-repo-latest.noarch.rpm"
+    state: present
+  register: enable_pgdb_pgsql_repo
+- debug: msg={{ enable_pgdb_pgsql_repo }}
+  when: print_debug == true
+
+
+- name: Enable PostgreSQL Common Repository for MapServer
+  yum_repository:
+    name: "pgsql-17-common-repo"
+    description: PostgreSQL Common Repository
+    baseurl: "https://download.postgresql.org/pub/repos/yum/common/redhat/rhel-9-x86_64/"
+    state: present
+
+
+- name: Download and Install GPG Key
+  rpm_key:
+    state: present
+    key: https://ftp.postgresql.org/pub/repos/yum/keys/PGDG-RPM-GPG-KEY-RHEL
+
+
+- name: Update Caches for DNF Packages
+  shell: |
+    dnf makecache -y
+  register: update_dnf_cache
+- debug: msg={{ update_dnf_cache }}
+  when: print_debug == true
+
+

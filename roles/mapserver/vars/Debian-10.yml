@@ -1,0 +1,18 @@
+---
+
+# basemaps needs make unzip wget git
+packages_list:
+  - apache2
+  - cgi-mapserver
+  - git
+  - imposm
+  - libapache2-mod-mapcache
+  - make
+  - mapserver-bin
+  - postgis
+  - unzip
+  - wget
+  - gcc
+
+mapcache_vhost_filename: /etc/apache2/sites-available/000-default.conf
+

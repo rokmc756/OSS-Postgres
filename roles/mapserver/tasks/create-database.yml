@@ -1,0 +1,28 @@
+---
+- name: Create Database User
+  postgresql_user:
+    name: osm
+    password: osm
+  become: yes
+  become_user: postgres
+  become_method: su
+
+
+- name: Create Database
+  postgresql_db:
+    name: osm
+    owner: osm
+  become: yes
+  become_user: postgres
+  become_method: su
+
+
+- name: Add PostGIS Extension to Database
+  postgresql_ext:
+    db: osm
+    name: postgis
+  become: yes
+  become_user: postgres
+  become_method: su
+
+

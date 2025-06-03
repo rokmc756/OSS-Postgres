@@ -40,6 +40,8 @@ shutdown:
 		ln -sf ansible-hosts-rk9-bucardo ansible-hosts;\
 	elif [ "${*}" = "single" ] || [ "${*}" = "pgwatch2" ] || [ "${*}" = "grafana" ]; then\
 		ln -sf ansible-hosts-rk9-single ansible-hosts;\
+	elif [ "${*}" = "mapserver" ]; then\
+		ln -sf ansible-hosts-rk9-mapserver ansible-hosts;\
 	elif [ "${*}" = "hosts" ]; then\
 		ln -sf ansible-hosts-rk9 ansible-hosts;\
 	else\

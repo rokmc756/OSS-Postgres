@@ -1,0 +1,9 @@
+---
+- name: Install Mapserver Packages
+  package:
+    name: "{{ packages_list }}"
+  # when: ansible_os_family == "Debian"
+
+
+# https://github.com/omniscale/imposm3/releases
+

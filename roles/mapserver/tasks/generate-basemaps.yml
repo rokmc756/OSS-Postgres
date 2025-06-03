@@ -1,0 +1,72 @@
+---
+# We offer the possibility to host the basemaps repo in files/basemaps as a git submodule.
+# Note : currently, if this method is used, any remote modification is erased.
+- name: Check if the Basemaps Repo has been Cloned in Files/
+  run_once: true
+  local_action: stat path={{ role_path }}/files/basemaps/.git
+  register: basemaps_locally_available
+
+
+#- name: Copy Local Basemaps to Host
+#  copy:
+#    src: "{{ role_path }}/files/basemaps/"
+#    dest: /srv/osm/basemaps/
+#  when: basemaps_locally_available.stat.exists
+
+
+- name: Clone Basemaps
+  git:
+    repo: https://github.com/mapserver/basemaps
+    dest: /srv/osm/basemaps
+  when: basemaps_locally_available.stat.exists != True
+
+
+# This is usually a one shot. Unless no .zip file is in /data, we skip the whole thing.
+# Simply remove the .zip files in basemaps/data/ if you need to refresh it.
+- name: Check if Basemaps/data has been Initialized
+  find:
+    paths: /srv/osm/basemaps/data
+    patterns: '*.zip'
+  register: basemaps_data_zip_list
+
+
+- name: Upload the Local Shapefiles, if Available, to Save Some Bandwidth to the OSM Project
+  copy:
+    src: "{{ item }}"
+    dest: /srv/osm/basemaps/data/
+  with_fileglob:
+    # Let's get to the root of the playbook
+    - "../../../*land-polygons*.zip"
+    - "*land-polygons*.zip"
+  when: basemaps_data_zip_list.matched == 0
+
+
+- name: Initialize Basemaps/data
+  shell: |
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib64
+    make
+  args:
+    chdir: /srv/osm/basemaps/data/
+  when: basemaps_data_zip_list.matched == 0
+
+
+# Customize Makefile
+- name: Customize Basemaps Makefile
+  template:
+    src: "{{ item }}"
+    dest: /srv/osm/basemaps/Makefile
+    backup: no
+  with_first_found:
+    - files:
+        - "basemaps/Makefile.{{ ansible_fqdn }}.j2"
+        - "basemaps/Makefile.j2"
+      skip: true
+  register: tmp
+
+
+- name: Generate Basemaps
+  # It seems Make doesn't see a makefile's modification worth a rebuild, so we force it a bit.
+  command: "{{ tmp.changed | ternary('make --always-make', 'make') }}"
+  args:
+    chdir: /srv/osm/basemaps/
+

@@ -1,0 +1,10 @@
+all:
+  hosts:
+    mapserver1.xlii.si:
+      basemaps_style: google
+
+  vars:
+    # Default basemaps style
+    basemaps_style: default
+
+

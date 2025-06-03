@@ -1,0 +1,7 @@
+---
+# Basemaps needs make unzip wget git
+mapcache_vhost_filename: /etc/httpd/conf.d/000-default.conf
+packages_list: "mapserver,mapserver-devel,mapserver-java,mapserver-libs,mapserver-perl,mapserver-ruby,fcgi,gdal-libs,httpd,jasper-libs,libdap,libspatialite,mod_http2,mod_lua,osm2pgsql,git,make,unzip,wget,gcc"
+
+# imposm libapache2-mod-mapcache mapserver-bin
+

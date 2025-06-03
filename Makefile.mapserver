@@ -1,0 +1,25 @@
+mapserver:
+	@if [ ! -z ${r} ] && [ "${s}" != "all" ]; then\
+		if [ -z ${c} ];  then\
+			ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-mapserver.yml -e '{"${s}": True}' --tags='${r}';\
+		elif [ ! -z ${c} ];  then\
+			if [ "${c}" = "all" ]; then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-mapserver.yml -e '{"${s}": True}' -e '{mapserver_all: True}' --tags='${r}';\
+			elif [ "${c}" != "all" ]; then\
+				ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-mapserver.yml -e '{"${s}": True}' -e '{"${c}": True}' --tags='${r}';\
+			else\
+				echo "No actions to ${r} mapserver";\
+			fi;\
+		else\
+			echo "No actions to ${r} mapserver";\
+		fi;\
+	elif [ ! -z ${r} ] && [ "${s}" = "all" ]; then\
+		if [ -z ${c} ];  then\
+			ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-mapserver.yml -e '{mapserver_all: True}' --tags='${r}';\
+		else\
+			echo "No actions to ${r} mapserver";\
+		fi;\
+	else\
+		echo "No actions to ${r} mapserver";\
+	fi
+

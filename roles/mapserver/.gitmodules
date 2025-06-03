@@ -1,0 +1,3 @@
+[submodule "roles/mapserver/files/basemaps"]
+	path = roles/mapserver/files/basemaps
+	url = https://github.com/mapserver/basemaps

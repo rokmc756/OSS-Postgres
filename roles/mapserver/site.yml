@@ -1,0 +1,7 @@
+---
+
+- name: "Role for OSM/MapServer/Postgis installation and management"
+  hosts: all
+  roles:
+    - mapserver
+

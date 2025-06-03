@@ -1,0 +1,87 @@
+---
+- name: Check OS ( MapServer )
+  fail: msg="Not a Red Hat/CentOS/Rocky or Unbuntu/Debian based system!"
+  when: ansible_distribution != 'RedHat' or ansible_distribution != 'CentOS' or ansible_distribution != 'Rocky' or ansible_distribution != 'Debian' or ansible_distribution != 'Ubuntu'
+
+
+- name: Set Facts for MapServer
+  import_tasks: set-facts.yml
+  tags: setup, remove, install, uninstall, config, gather, create, delete
+  when: inventory_hostname in groups['mapserver']
+
+
+- name: Enable PGDB Postgres Repository
+  import_tasks: enable-repo.yml
+  tags: enable, install
+  when: (( repo is defined and repo == true ) or ( mapserver_all is defined and mapserver_all == true )) and inventory_hostname in groups['mapserver']
+
+
+- name: Gather OS Specific Variables
+  block:
+    - include_vars: "{{ item }}"
+      with_first_found:   # Files are in 'vars/' subdirectory and contain a one level dictionary 'var: value'
+        - "{{ ansible_distribution }}-{{  ansible_distribution_major_version }}.yml"
+        - "{{ ansible_distribution }}.yml"
+        - "{{ ansible_os_family }}.yml"
+        #- "defaults.yml"  # No defaults for this role at the moment.
+  rescue:
+    - fail:
+        msg: "Unexpected OS/Distribution. Create and fill vars/{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml"
+  when: inventory_hostname in groups['mapserver']
+  # tags: gather, install
+
+
+# Create Dedicated Directories
+- name: Create Imposm and MapCache Dedicated Directory
+  file:
+    path: "{{ item }}"
+    state: directory
+  with_items:
+    - "/srv/osm/imposm"
+    - "/srv/osm/mapcache"
+  tags: create, install
+  when: (( dir is defined and dir == true ) or ( mapserver_all is defined and mapserver_all == true )) and inventory_hostname in groups['mapserver']
+
+
+- name: Install MapServer Packages
+  import_tasks: install-pkgs.yml
+  tags: setup, install
+  when: (( pkgs is defined and pkgs == true ) or ( mapserver_all is defined and mapserver_all == true )) and inventory_hostname in groups['mapserver']
+
+
+#- name: Create Database
+#  import_tasks: create-database.yml
+#  tags: create, install
+#  when: (( db is defined and db == true ) or ( mapserver_all is defined and mapserver_all == true )) and inventory_hostname in groups['mapserver']
+
+
+- name: Retrieve the OSM Basemaps
+  import_tasks: generate-basemaps.yml
+  tags: generate, install
+  when: (( basemap is defined and basemap == true ) or ( mapserver_all is defined and mapserver_all == true )) and inventory_hostname in groups['mapserver']
+
+
+- name: Import Data with IMPOSM
+  import_tasks: import-imposm.yml
+  tags: import, install
+  when: (( data is defined and data == true ) or ( mapserver_all is defined and mapserver_all == true )) and inventory_hostname in groups['mapserver']
+
+
+- name: Configure Mapcache and Apache
+  import_tasks: config-mapcache.yml
+  tags: config, install
+  when: (( mapcache is defined and mapcache == true ) or ( mapserver_all is defined and mapserver_all == true )) and inventory_hostname in groups['mapserver']
+
+
+- name: Uninstall Packages
+  import_tasks: uninstall-pkgs.yml
+  tags: remove, uninstall
+  when: (( pkgs is defined and pkgs == true ) or ( mapserver_all is defined and mapserver_all == true )) and inventory_hostname in groups['mapserver']
+
+
+- name: Disable PGDB Postgres Repository
+  import_tasks: disable-repo.yml
+  tags: disable, uninstall
+  when: (( repo is defined and repo == true ) or ( mapserver_all is defined and mapserver_all == true )) and inventory_hostname in groups['mapserver']
+
+

@@ -1,0 +1,64 @@
+---
+# Upload .osm.pbf files found at the root of the playbook or in the /files role's subfolder
+- name: Imposm - Upload Any Local .osm.pbf Files
+  copy:
+    src: "{{ item }}"
+    dest: /srv/osm/imposm/
+  with_fileglob:
+    # Let's get to the root of the playbook
+    - "../../../*.osm.pbf"
+    - "*.osm.pbf"
+
+
+# If the .osm.pbf files are not newer than the cache, we skip the whole thing.
+- name: Imposm - Check if There is Already a Cache
+  stat:
+    path: /srv/osm/imposm/imposm_relations.cache
+  register: tmp
+
+
+- name: Imposm - List PBF Files Waiting to be Imported
+  shell: |
+    find /srv/osm/imposm -iname '*.osm.pbf' {{ tmp.stat.exists | ternary('-newer imposm_relations.cache', '') }}
+  args:
+    chdir: /srv/osm/imposm
+  register: imposm_pbf_list
+  changed_when: False
+  check_mode: no
+
+
+- name: Imposm - Import Each New Files
+  shell: |
+    imposm --mapping-file=/srv/osm/basemaps/imposm-mapping.py --proj=EPSG:3857 --read --merge-cache {{ item|quote }}
+  args:
+    chdir: /srv/osm/imposm
+  loop: "{{ imposm_pbf_list.stdout_lines }}"
+
+
+- name: Imposm - Write to Database
+  shell: |
+    imposm --mapping-file=/srv/osm/basemaps/imposm-mapping.py --proj=EPSG:3857 \
+    --connection=postgis://{{ pgsql.db_user }}:{{ pgsql.db_pass }}@192.168.2.191:5432/{{ pgsql.db_name }} --write
+  args:
+    chdir: /srv/osm/imposm
+  when: imposm_pbf_list.stdout_lines
+
+
+- name: Imposm - Optimze Database
+  shell: |
+    imposm --mapping-file=/srv/osm/basemaps/imposm-mapping.py --proj=EPSG:3857 \
+    --connection=postgis://{{ pgsql.db_user }}:{{ pgsql.db_pass }}@192.168.2.191:5432/{{ pgsql.db_name }} --optimize
+  args:
+    chdir: /srv/osm/imposm
+  when: imposm_pbf_list.stdout_lines
+
+
+- name: Imposm - Switch New Data to Production
+  shell: |
+    imposm --mapping-file=/srv/osm/basemaps/imposm-mapping.py --proj=EPSG:3857 \
+    --connection=postgis://{{ pgsql.db_user }}:{{ pgsql.db_pass }}@localhost:5432/{{ pgsql.db_name }} --deploy-production-tables
+  args:
+    chdir: /srv/osm/imposm
+  when: imposm_pbf_list.stdout_lines
+
+

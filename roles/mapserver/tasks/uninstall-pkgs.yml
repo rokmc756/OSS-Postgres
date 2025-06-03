@@ -1,0 +1,10 @@
+---
+- name: Uninstall Mapserver Packages
+  package:
+    name: "{{ packages_list }}"
+    state: absent
+  # when: ansible_os_family == "Debian"
+
+
+# https://github.com/omniscale/imposm3/releases
+

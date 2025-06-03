@@ -1,0 +1,81 @@
+---
+# MapCache
+- name: Configure MapCache
+  template:
+    src: "{{ item }}"
+    dest: /srv/osm/mapcache/mapcache.xml
+    backup: no
+  with_first_found:
+    - "mapcache/mapcache.xml.{{ ansible_fqdn }}.j2"
+    - "mapcache/mapcache.xml.{{ ansible_distribution }}-{{  ansible_distribution_major_version }}.j2"
+    - "mapcache/mapcache.xml.{{ ansible_distribution }}.j2"
+    - "mapcache/mapcache.xml.j2"
+  notify:
+    - Restart Apache HTTPd Server
+
+
+# Apache Customizations
+- name: Apache - Activate CGI module
+  apache2_module:
+    state: present
+    name: cgid
+  notify:
+    - Restart Apache HTTPd Server
+
+
+# Kinda Paranoiac but I prefer the CGI not being Freely Accessible
+- name: Apache - Restrict Access to CGI
+  lineinfile:
+    path: /etc/apache2/conf-available/serve-cgi-bin.conf
+    regexp: '^(\s+)Require '
+    line: '\1Require local'
+    backrefs: yes
+  notify:
+    - Restart Apache HTTPd Server
+
+
+# We gather Some Extra Data for the vHost Template
+- name: Apache - Set a Fact about whether SSL is Enabled or Not - 1
+  apache2_module:
+    state: present
+    name: ssl
+  check_mode: yes
+  register: tmp
+- name: Apache - Set a fact about whether SSL is enabled or not - 2
+  set_fact:
+    apache_module_ssl_enabled: "{{ not tmp.changed }}"
+
+
+- name: Apache - Set up vHost
+  template:
+    src: "{{ item }}"
+    dest: "{{ mapcache_vhost_filename }}"
+    backup: no
+  with_first_found:
+    - "apache2/vhost.{{ ansible_fqdn }}.j2"
+    - "apache2/vhost.{{ ansible_distribution }}-{{  ansible_distribution_major_version }}.j2"
+    - "apache2/vhost.{{ ansible_distribution }}.j2"
+    - "apache2/vhost.j2"
+  notify:
+    - Restart Apache HTTPd Server
+
+
+# We try not to Generate a 'changed' when using a2ensite, so we check beforehand.
+- name: Apache - Check if vHost is Enabled
+  shell: |
+    find -L /etc/apache2/sites-enabled/ -samefile {{ mapcache_vhost_filename | quote }}
+  register: tmp
+  changed_when: False
+  check_mode: no
+- name: Apache - Enable vhost
+  command: a2ensite {{ mapcache_vhost_filename | basename | quote }}
+  when: not tmp.stdout
+  notify:
+    - Restart Apache HTTPd Server
+
+
+- name: Apache - Check config
+  shell: |
+    apache2ctl configtest
+  changed_when: False
+
